@@ -10,10 +10,10 @@
   html,body { margin:0; height:100%; overflow:hidden; background:#eef4fa; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); }
   canvas { position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
 
-  #overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:16px;
+  #overlay { position:fixed; inset:0; display:flex; justify-content:center; padding:16px;
              background:rgba(190,214,236,.35); backdrop-filter:blur(3px); overflow:auto; }
   #overlay.hidden { display:none; }
-  .card { background:var(--card); border-radius:18px; padding:26px 30px; max-width:560px; width:100%;
+  .card { margin:auto; background:var(--card); border-radius:18px; padding:26px 30px; max-width:560px; width:100%;
           box-shadow:0 18px 60px rgba(22,50,74,.28); text-align:center; }
   .card h1 { margin:0; font-size:clamp(30px,6vw,46px); letter-spacing:.04em; font-weight:900; font-style:italic; }
   .card h1 span { color:var(--accent); }
@@ -29,6 +29,48 @@
   .seg button { font:700 14px system-ui,sans-serif; padding:8px 18px; border:0; background:#fff; color:var(--ink); cursor:pointer; }
   .seg button + button { border-left:2px solid #c3d4e4; }
   .seg button.on { background:var(--ink); color:#fff; }
+  .badges { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:4px 0 8px; }
+  .badge { background:#e6eff8; border-radius:999px; padding:5px 12px; font:700 13px system-ui,sans-serif; }
+  .cn { display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:4px; vertical-align:-1px;
+        background:radial-gradient(circle at 35% 35%,#ffe27a,#f2b01e); box-shadow:0 0 0 1.5px #b9830a inset; }
+  .badge.coin { color:#8a5a00; background:#fff3cf; }
+  .xp { height:8px; background:#dbe6f1; border-radius:6px; overflow:hidden; margin:0 auto 10px; max-width:320px; }
+  .xp > i { display:block; height:100%; background:linear-gradient(90deg,#3a9ad9,#6cc4ff); transition:width 1s cubic-bezier(.2,.8,.2,1); }
+  .missions { text-align:left; margin:6px 0 12px; }
+  .missions h3 { margin:0 0 4px; font-size:12px; letter-spacing:.1em; text-transform:uppercase; opacity:.6; }
+  .mission { display:flex; justify-content:space-between; gap:10px; background:#f0f6fb; border-radius:9px; padding:7px 10px; margin:4px 0; font-size:13.5px; }
+  .mission b { color:#8a5a00; white-space:nowrap; }
+  .row2 { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:2px; }
+  button.secondary { position:relative; font:800 18px system-ui,sans-serif; letter-spacing:.06em; color:var(--ink); background:#e6eff8; border:0; border-radius:12px;
+                     padding:13px 26px; cursor:pointer; box-shadow:0 4px 0 #b9cde0; }
+  button.secondary:active { transform:translateY(2px); box-shadow:0 2px 0 #b9cde0; }
+  button.secondary .dot { position:absolute; top:-5px; right:-5px; width:15px; height:15px; border-radius:50%; background:var(--accent); border:2px solid #fff; animation:pulse .7s infinite alternate; }
+  .tally { text-align:left; margin:10px 0; }
+  .tally .t { display:flex; justify-content:space-between; gap:10px; padding:5px 2px; border-bottom:1px dashed #cfdcea; font-size:14px; opacity:0; animation:pop .35s forwards; }
+  .tally .t b { font-variant-numeric:tabular-nums; color:#8a5a00; }
+  .tally .t.mission span { color:#1b7a38; font-weight:700; } .tally .t.level span { color:var(--accent); font-weight:800; } .tally .t.daily span { color:#3a7bd5; font-weight:700; }
+  .tally .t.total { font-size:21px; font-weight:900; border-bottom:0; border-top:2px solid var(--ink); margin-top:4px; padding-top:8px; }
+  @keyframes pop { from { opacity:0; transform:translateY(8px) scale(.97); } to { opacity:1; transform:none; } }
+  @keyframes pulse { to { transform:scale(1.15); } }
+  .lv { font-size:14px; margin-bottom:4px; } .lvlup { color:var(--accent); font-weight:900; letter-spacing:.08em; display:inline-block; animation:pulse .6s infinite alternate; }
+  .nextgoal { background:#fff6dd; border-radius:10px; padding:9px 12px; margin:10px 0; font-size:13.5px; text-align:left; }
+  .nextgoal.ready { background:#dff6e5; }
+  .bar { height:7px; background:#ecdfb4; border-radius:5px; margin-top:6px; overflow:hidden; } .bar i { display:block; height:100%; background:#f2b01e; }
+  .shop h2 { margin:14px 0 4px; font-size:12px; letter-spacing:.1em; text-transform:uppercase; opacity:.6; text-align:left; }
+  .shoprow { display:grid; grid-template-columns:34px 1fr auto; gap:2px 10px; align-items:center; text-align:left; padding:8px 4px; border-bottom:1px solid #dce7f1; }
+  .shoprow.pop { animation:flash .8s; } @keyframes flash { from { background:#fff1b8; } to { background:transparent; } }
+  .shoprow .ic { font-size:22px; text-align:center; } .shoprow .nm { font-weight:800; } .shoprow .fx { font-size:12.5px; opacity:.8; }
+  .pips { display:inline-flex; gap:3px; margin-left:8px; vertical-align:middle; } .pips i { width:9px; height:9px; border-radius:50%; background:#cbd8e5; } .pips i.on { background:var(--accent); }
+  button.buy { font:800 14px system-ui,sans-serif; padding:8px 12px; min-width:88px; border:0; border-radius:9px; background:#2fb457; color:#fff; cursor:pointer; box-shadow:0 3px 0 #1f8a40; }
+  button.buy:disabled { background:#b9c7d4; box-shadow:0 3px 0 #98a8b8; cursor:not-allowed; }
+  button.buy.max { background:#f2b01e; color:#3b2a00; box-shadow:0 3px 0 #b9830a; }
+  .swatches { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:4px 0 6px; }
+  .sw { width:92px; border:2px solid #c3d4e4; border-radius:12px; padding:8px 4px; background:#fff; cursor:pointer; font:700 12px system-ui,sans-serif; color:var(--ink); }
+  .sw.eq { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; } .sw.pop { animation:flash .8s; }
+  .sw .dot { width:30px; height:30px; border-radius:50%; margin:0 auto 5px; border:2px solid rgba(0,0,0,.15); } .sw small { display:block; font-weight:600; opacity:.75; margin-top:2px; }
+  details.how { text-align:left; margin:12px 0 4px; } details.how summary { cursor:pointer; font-weight:700; text-align:center; opacity:.75; font-size:14px; }
+  .foot { position:sticky; bottom:0; margin:10px -30px -26px; padding:14px 30px 22px; border-radius:0 0 18px 18px; background:#f7fbfe; box-shadow:0 -1px 0 #dce7f1, 0 -12px 16px -8px rgba(22,50,74,.12); }
+  .linkbtn { background:none; border:0; color:#6b7f92; font-size:12px; text-decoration:underline; cursor:pointer; margin-top:12px; }
   button.primary { font:800 18px system-ui,sans-serif; letter-spacing:.06em; color:#fff; background:var(--accent); border:0; border-radius:12px;
                    padding:13px 34px; cursor:pointer; box-shadow:0 4px 0 #a82a19; }
   button.primary:active { transform:translateY(2px); box-shadow:0 2px 0 #a82a19; }
@@ -115,9 +157,9 @@ function groundRGB(m) {
 const BACK = 260, FAR = 3200, NEAR = 90, FOG0 = 1900;
 let F = 480, HC = 156, HOR = 156;            // focal length, camera height, horizon screen-y
 const LEVELS = {
-  chill:  { label: 'Chill',  obs: -1.5, clear: 18, aval: -60, cross: 0.4 },
-  normal: { label: 'Normal', obs: 0,    clear: 0,  aval: 0,   cross: 1 },
-  hard:   { label: 'Hard',   obs: 1,    clear: -8, aval: 30,  cross: 1.5 },
+  chill:  { label: 'Chill',  obs: -1.5, clear: 18, aval: -60, cross: 0.4, pay: 1 },
+  normal: { label: 'Normal', obs: 0,    clear: 0,  aval: 0,   cross: 1,   pay: 1 },
+  hard:   { label: 'Hard',   obs: 1,    clear: -8, aval: 30,  cross: 1.5, pay: 1.5 },
 };
 let level = 'normal';
 try { const v = localStorage.getItem('avalancheRunLevel'); if (LEVELS[v]) level = v; } catch (e) { /* storage may be unavailable */ }
@@ -198,11 +240,21 @@ const SFX = {
   land(good) { this.noise(0.22, 0.28, 500); if (good) { this.tone(523, 0.12, 'square', 0.07); this.tone(784, 0.18, 'square', 0.07, 0, 0.09); } },
   pickup() { this.tone(660, 0.1, 'sine', 0.14); this.tone(990, 0.18, 'sine', 0.14, 0, 0.08); },
   close() { this.tone(1100, 0.07, 'square', 0.05); },
+  coin(n) { const f = 880 * Math.pow(1.0595, Math.min(n - 1, 14) * 2 % 24); this.tone(f, 0.08, 'square', 0.05); this.tone(f * 1.5, 0.12, 'square', 0.04, 0, 0.05); },
+  combo(m) { this.tone(520 + m * 70, 0.12, 'triangle', 0.12); this.tone(780 + m * 90, 0.16, 'triangle', 0.1, 0, 0.08); },
+  milestone() { [523, 659, 784].forEach((f, i) => this.tone(f, 0.14, 'triangle', 0.1, 0, i * 0.07)); },
+  mission() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.13, 0, i * 0.09)); },
+  record() { [392, 523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, 0.22, 'square', 0.07, 0, i * 0.08)); },
+  levelup() { [440, 554, 659, 880, 1109].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.13, 0, i * 0.09)); },
+  tick(i) { this.tone(600 + i * 70, 0.07, 'square', 0.05); },
+  buy() { this.tone(1200, 0.08, 'square', 0.07); this.tone(1800, 0.2, 'square', 0.06, 0, 0.07); },
+  nope() { this.tone(160, 0.14, 'sawtooth', 0.08, -30); },
   buried() { this.noise(1.2, 0.6, 400); this.tone(70, 0.9, 'sawtooth', 0.2, -40); },
 };
 
 /* ---------- input ---------- */
 const keys = {}, touchKeys = {};
+let hopReq = 0;               // a hop press is buffered for a moment so a quick tap between two sim steps isn't lost
 function readInput() {
   return {
     left: keys.ArrowLeft || keys.KeyA || touchKeys.left,
@@ -214,12 +266,16 @@ function readInput() {
 }
 const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
 addEventListener('keydown', e => {
-  if (GAME_KEYS.has(e.code)) e.preventDefault();
+  if (GAME_KEYS.has(e.code) && !shopOpen) e.preventDefault();
   if (e.repeat) { keys[e.code] = true; return; }
   keys[e.code] = true;
+  if ((e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && mode === 'playing') hopReq = 0.15;
   if (e.code === 'KeyM') toggleMute();
-  if (e.code === 'KeyP' || e.code === 'Escape') { if (mode === 'playing') pauseGame(); else if (mode === 'paused') resumeGame(); }
-  if (e.code === 'Space' || e.code === 'Enter') {
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    if (shopOpen) { if (e.code === 'Escape') showCard(shopFrom, { animate: false }); }
+    else if (mode === 'playing') pauseGame(); else if (mode === 'paused') resumeGame();
+  }
+  if ((e.code === 'Space' || e.code === 'Enter') && !shopOpen) {
     if (e.code === 'Enter' && mode !== 'playing') e.preventDefault();
     if (mode === 'title' || mode === 'over') startRun();
     else if (mode === 'paused') resumeGame();
@@ -235,7 +291,7 @@ if (isTouch) touchEl.classList.add('on');
 touchEl.querySelectorAll('button').forEach(b => {
   const k = b.dataset.k;
   const set = v => e => { e.preventDefault(); touchKeys[k] = v; b.classList.toggle('down', v); };
-  b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); set(true)(e); });
+  b.addEventListener('pointerdown', e => { b.setPointerCapture(e.pointerId); set(true)(e); if (k === 'trick' && mode === 'playing') hopReq = 0.15; });
   b.addEventListener('pointerup', set(false));
   b.addEventListener('pointercancel', set(false));
   b.addEventListener('contextmenu', e => e.preventDefault());
@@ -268,6 +324,90 @@ function setLevel(l) {
   try { localStorage.setItem('avalancheRunLevel', l); } catch (e) { /* ignore */ }
 }
 
+/* ---------- progression: coins, upgrades, cosmetics, missions, XP ---------- */
+const SAVE_KEY = 'avalancheRunSave1';
+const UPGRADES = [
+  { id: 'magnet', name: 'Coin Magnet',  icon: '🧲', max: 5, base: 100, grow: 1.75, fx: l => `${Math.round((28 + 16 * l) / 28 * 100)}% pickup range` },
+  { id: 'wax',    name: 'Premium Wax',  icon: '🕯️', max: 5, base: 90,  grow: 1.75, fx: l => `Hot wax lasts ${6 + 1.5 * l}s` },
+  { id: 'combo',  name: 'Combo Keeper', icon: '🔥', max: 5, base: 100, grow: 1.75, fx: l => `Combo timer ${(5 + 0.8 * l).toFixed(1)}s` },
+  { id: 'cocoa',  name: 'Thermos',      icon: '☕', max: 5, base: 110, grow: 1.75, fx: l => `+${25 * l}% cocoa` },
+  { id: 'turn',   name: 'Sharp Edges',  icon: '⛷️', max: 5, base: 120, grow: 1.75, fx: l => `+${6 * l}% turning` },
+  { id: 'gold',   name: 'Gold Digger',  icon: '🪙', max: 5, base: 130, grow: 1.75, fx: l => `+${15 * l}% coin value` },
+  { id: 'score',  name: 'Score Boost',  icon: '⭐', max: 5, base: 140, grow: 1.75, fx: l => `+${8 * l}% points` },
+  { id: 'cold',   name: 'Cold Snap',    icon: '❄️', max: 5, base: 150, grow: 1.75, fx: l => `Avalanche ${10 * l} px/s slower` },
+  { id: 'hearts', name: 'Tough Skin',   icon: '❤️', max: 2, base: 400, grow: 2.75, fx: l => `${3 + l} hearts` },
+];
+const JACKETS = [
+  { id: 'classic', name: 'Classic',  cost: 0,    main: '#e8412c', dark: '#b92c1a', front: '#c2331f' },
+  { id: 'ocean',   name: 'Ocean',    cost: 200,  main: '#2f7fe0', dark: '#1f5fb0', front: '#2669c0' },
+  { id: 'sun',     name: 'Sunshine', cost: 200,  main: '#f2b01e', dark: '#c98a0c', front: '#d99c14' },
+  { id: 'berry',   name: 'Berry',    cost: 350,  main: '#c23a8a', dark: '#962a69', front: '#ad3178' },
+  { id: 'night',   name: 'Midnight', cost: 600,  main: '#3a4660', dark: '#252d40', front: '#2f3a52' },
+  { id: 'gold',    name: 'Gold Rush', cost: 1500, main: '#f0c020', dark: '#b98d10', front: '#d9aa18', shiny: true },
+];
+const TRAILS = [
+  { id: 'snow',    name: 'Powder',    cost: 0 },
+  { id: 'ice',     name: 'Ice Blue',  cost: 250,  col: '#3fb8ff' },
+  { id: 'ember',   name: 'Ember',     cost: 500,  col: '#ff7a2f' },
+  { id: 'gold',    name: 'Gold Dust', cost: 900,  col: '#f0b429' },
+  { id: 'rainbow', name: 'Rainbow',   cost: 1800, rainbow: true },
+];
+const MISSIONS = {
+  gates:   { text: n => `Pass ${n} gates in one run`,          get: () => run.gates,                    tiers: [8, 15, 25] },
+  perfect: { text: n => `Hit ${n} perfect gates`,              get: () => run.perfect,                  tiers: [3, 6, 10] },
+  dist:    { text: n => `Ski ${fmt(n)} m in one run`,          get: () => run.dist,                     tiers: [1500, 3000, 6000] },
+  clean:   { text: n => `Ski ${fmt(n)} m without crashing`,    get: () => run.dist - run.lastCrashM,    tiers: [800, 1800, 3500] },
+  tricks:  { text: n => `Land ${n} trick${n > 1 ? 's' : ''}`,  get: () => run.tricks,                   tiers: [1, 3, 6] },
+  spin:    { text: n => `Land a ${n * 360}° spin`,             get: () => run.bestTrick,                tiers: [1, 2, 2] },
+  close:   { text: n => `Make ${n} close calls`,               get: () => run.closeCalls,               tiers: [3, 6, 10] },
+  coins:   { text: n => `Collect ${n} coins in one run`,       get: () => run.coins,                    tiers: [30, 60, 100] },
+  combo:   { text: n => `Reach a x${n} multiplier`,            get: () => run.maxMult,                  tiers: [3, 5, 8] },
+};
+const MISSION_REWARD = [40, 90, 180];
+const defaultSave = () => ({ coins: 0, xp: 0, up: {}, jackets: ['classic'], trails: ['snow'], jacket: 'classic', trail: 'snow',
+                             missions: [], bestDist: {}, lastDay: '', streak: 0, runs: 0 });
+let save = defaultSave();
+const U = id => save.up[id] || 0;
+const costOf = (u, l) => Math.round(u.base * Math.pow(u.grow, l) / 10) * 10;
+const maxHearts = () => 3 + U('hearts');
+const jacket = () => JACKETS.find(j => j.id === save.jacket) || JACKETS[0];
+const trailStyle = () => TRAILS.find(t => t.id === save.trail) || TRAILS[0];
+const xpForLevel = L => 1500 * L * (L - 1) / 2;                 // cumulative XP needed to reach level L
+function levelOf(xp) { let L = 1; while (xp >= xpForLevel(L + 1)) L++; return L; }
+function levelProgress(xp) { const L = levelOf(xp), a = xpForLevel(L), b = xpForLevel(L + 1); return { L, frac: (xp - a) / (b - a) }; }
+function newMission(exclude) {
+  const types = Object.keys(MISSIONS).filter(t => !exclude.includes(t));
+  const type = types[Math.floor(Math.random() * types.length)], r = Math.random();
+  const w = levelOf(save.xp) >= 4 ? [.3, .4, .3] : [.5, .35, .15];
+  const tier = r < w[0] ? 0 : r < w[0] + w[1] ? 1 : 2;
+  return { type, target: MISSIONS[type].tiers[tier], reward: MISSION_REWARD[tier] };
+}
+function ensureMissions() {
+  save.missions = (Array.isArray(save.missions) ? save.missions : []).filter(m => m && MISSIONS[m.type] && m.target > 0).slice(0, 3);
+  while (save.missions.length < 3) save.missions.push(newMission(save.missions.map(m => m.type)));
+}
+function loadSave() {
+  try {
+    const o = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (o && typeof o === 'object') save = Object.assign(defaultSave(), o);
+  } catch (e) { /* storage unavailable or corrupt: start fresh */ }
+  const d = defaultSave();
+  save.coins = Math.max(0, Math.floor(+save.coins) || 0); save.xp = Math.max(0, Math.floor(+save.xp) || 0);
+  save.up = save.up && typeof save.up === 'object' ? save.up : {};
+  for (const u of UPGRADES) save.up[u.id] = clamp(Math.floor(+save.up[u.id]) || 0, 0, u.max);
+  save.jackets = (Array.isArray(save.jackets) ? save.jackets : d.jackets).filter(id => JACKETS.some(j => j.id === id));
+  save.trails = (Array.isArray(save.trails) ? save.trails : d.trails).filter(id => TRAILS.some(t => t.id === id));
+  if (!save.jackets.includes('classic')) save.jackets.push('classic');
+  if (!save.trails.includes('snow')) save.trails.push('snow');
+  if (!save.jackets.includes(save.jacket)) save.jacket = 'classic';
+  if (!save.trails.includes(save.trail)) save.trail = 'snow';
+  if (!save.bestDist || typeof save.bestDist !== 'object') save.bestDist = {};
+  ensureMissions();
+}
+function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } }
+loadSave();
+let coinLine = 0, recordY = 0, recordPlaced = true;
+
 function add(o) {
   o.seed = rng() * 100; o.done = false; o.hit = false;
   const ci = Math.floor(o.y / CH);
@@ -289,7 +429,11 @@ function addHard(kind, x, y, b, lane) {
     case 'dead': return add({ t: 'dead', x, y, r: 10 * s, s, zh: 58, lane });
     case 'rock': { const r = lane ? 12 + rng() * 7 : 13 + rng() * 9; return add({ t: 'rock', x, y, r, zh: 18, ice: b === 2, lane }); }
     case 'stump': return add({ t: 'stump', x, y, r: 11, zh: 12, lane });
-    case 'log': return add({ t: 'log', x, y, w: 62 + rng() * 34, h: 18, zh: 13, lane });
+    case 'log': {
+      const o = add({ t: 'log', x, y, w: 62 + rng() * 34, h: 18, zh: 13, lane });
+      if (lane && rng() < 0.55) add({ t: 'coin', x, y, z: 30, gold: rng() < 0.2 });   // a coin floating over a log rewards the hop
+      return o;
+    }
   }
 }
 function genEdges(y, c, half, b) {
@@ -306,6 +450,7 @@ function genRow(y) {
   const m = y / PX_PER_M, d = difficulty(y), b = biomeIndex(m);
   const c = laneCenter(y), half = laneHalf(y), gap = lerp(118, 82, d);
   genEdges(y, c, half, b);
+  if (!recordPlaced && y >= recordY) { recordPlaced = true; add({ t: 'record', x: c, y, half, w: half * 2, m: Math.round(recordY / PX_PER_M) }); }
   if (y < 380) return gap;
 
   const locked = y < lockUntil;
@@ -328,6 +473,8 @@ function genRow(y) {
   pathOff = clamp(pathOff, -(half - 100), half - 100);
   const px = c + pathOff;
   pathPts.push({ y, x: px, clear });
+  if (coinLine > 0) { add({ t: 'coin', x: px + (rng() - .5) * 6, y: y + gap * 0.25, z: 0, gold: coinLine === 1 }); coinLine--; }
+  else if (y > 500 && rng() < 0.03) coinLine = 6 + Math.floor(rng() * 5);
 
   if (gateRow) add({ t: 'gate', x: px, y, half: 62 });
 
@@ -357,6 +504,8 @@ function genRow(y) {
   if (!locked && !slalom) {
     if (y > 800 && rng() < (b >= 1 ? 0.035 : 0.02)) {
       add({ t: 'ramp', x: px + (rng() - .5) * 20, y, w: 64, h: 46 });
+      [67, 86, 89, 75, 45].forEach((z, i) => add({ t: 'coin', x: px, y: y + 70 * (i + 1), z, gold: i === 2 }));   // an arc along the jump
+
       lockUntil = y + 520;
     }
     if (rng() < 0.10) { // mogul field
@@ -365,7 +514,7 @@ function genRow(y) {
     }
     if (rng() < (b === 2 ? 0.05 : b === 1 ? 0.035 : 0.015))
       add({ t: 'ice', x: c + (rng() * 2 - 1) * half * 0.8, y: y + 20, a: 70 + rng() * 60, b: 30 + rng() * 20 });
-    if (rng() < 0.012 + d * 0.006) add({ t: 'cocoa', x: px + (rng() - .5) * 60, y });
+    if (rng() < (0.012 + d * 0.006) * (1 + 0.25 * U('cocoa'))) add({ t: 'cocoa', x: px + (rng() - .5) * 60, y });
     if (rng() < 0.010) add({ t: 'wax', x: px + (rng() - .5) * 60, y });
     if (b >= 1 && rng() < (0.012 + d * 0.014) * LV().cross) {
       const dir = rng() < .5 ? -1 : 1;
@@ -392,14 +541,18 @@ function nearby(y, range, fn) {
 function newRun() {
   rng = mulberry32((Math.random() * 4294967296) >>> 0);
   chunks = new Map(); particles.length = popups.length = trail.length = 0;
-  genY = -520; pathOff = 0; lockUntil = 0; slalom = null; pathPts = [];
+  genY = -520; pathOff = 0; lockUntil = 0; slalom = null; pathPts = []; coinLine = 0;
+  recordY = (save.bestDist[level] || 0) * PX_PER_M; recordPlaced = recordY < 3000;   // only mark a record worth racing
   sk = { x: 0, y: 0, vx: 0, vy: 0, speed: 0, heading: 0, z: 0, vz: 0, spin: 0, spinDir: 1, spinAccum: 0, airT: 0,
-         tumble: 0, tumRot: 0, invuln: 0, hearts: 3, tuck: false, wax: 0, onIce: false, buried: false, grounded: true, trickPrev: false };
+         tumble: 0, tumRot: 0, invuln: 0, hearts: maxHearts(), tuck: false, wax: 0, waxMax: 6, onIce: false, buried: false, grounded: true, trickPrev: false };
   run = { bonus: 0, dist: 0, combo: 0, comboT: 0, gates: 0, missed: 0, tricks: 0, bestTrick: 0, closeCalls: 0, topSpeed: 0,
-          avalY: -800, avalSpeed: 240, shake: 0, biome: 0, banner: 0, bannerText: '', time: 0, dyingT: 0, cause: '', danger: 0 };
+          avalY: -800, avalSpeed: 240, shake: 0, biome: 0, banner: 0, bannerText: '', time: 0, dyingT: 0, cause: '', danger: 0,
+          coins: 0, perfect: 0, spinsTotal: 0, maxMult: 1, lastCrashM: 0, comboMax: 5, nextMS: 500, recordDone: false, recordBonus: 0,
+          flash: 0, coinStreak: 0, coinT: 0, coinBump: 0,
+          missions: save.missions.map(m => ({ type: m.type, target: m.target, reward: m.reward, done: false })) };
   cam = { x: 0, y: -BACK, roll: 0 };
   if (!flakes.length) for (let i = 0; i < 170; i++) flakes.push({ x: Math.random() * 1600, y: Math.random() * 1800, d: 0.25 + Math.random() * 0.75, ph: Math.random() * 6 });
-  sk.trickPrev = !!readInput().trick;
+  sk.trickPrev = !!readInput().trick; hopReq = 0;
   ensureGen(FAR + 300);
 }
 const score = () => Math.floor(run.dist + run.bonus);
@@ -419,20 +572,57 @@ function die(cause) {
   mode = 'dying'; run.cause = cause; run.dyingT = 0;
   if (cause === 'buried') { sk.buried = true; SFX.buried(); }
 }
+const todayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+let lastTally = null;
+/* Turn the run into coins, XP and mission progress, and write the save. Returns the itemised tally the game-over card plays back. */
+function finishRun() {
+  const T = { lines: [], total: 0 };
+  const line = (label, v, cls = '') => { if (v > 0) { T.lines.push({ label, v, cls }); T.total += v; } };
+  line('Coins collected', Math.floor(run.coins));
+  line(`Distance · ${fmt(run.dist)} m`, Math.floor(run.dist / 50));
+  line(`Gates · ${run.gates}${run.perfect ? ` (${run.perfect} perfect)` : ''}`, run.gates * 3 + run.perfect * 2);
+  line(`Tricks · ${run.tricks}`, run.spinsTotal * 8);
+  line(`Close calls · ${run.closeCalls}`, run.closeCalls * 2);
+  line('Record broken', run.recordBonus);
+  for (const m of run.missions) if (m.done) line(`Mission · ${MISSIONS[m.type].text(m.target)}`, m.reward, 'mission');
+  if (LV().pay > 1) line(`${LV().label} bonus ×${LV().pay}`, Math.round(T.total * (LV().pay - 1)));
+  const today = todayKey();
+  if (run.dist >= 100 && save.lastDay !== today) {                      // first real run of the day
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    save.streak = save.lastDay === todayKey(y) ? save.streak + 1 : 1; save.lastDay = today;
+    line(`Daily streak · day ${save.streak}`, 25 * Math.min(save.streak, 7), 'daily');
+  }
+  const pb = levelProgress(save.xp);
+  save.xp += score();
+  const pa = levelProgress(save.xp);
+  for (let L = pb.L + 1; L <= pa.L; L++) line(`Level up! Skier Lv ${L}`, 75 * L, 'level');
+  Object.assign(T, { lvBefore: pb.L, fracBefore: pb.frac, lvAfter: pa.L, fracAfter: pa.frac });
+  save.coins += T.total; save.runs++;
+  if (run.dist > (save.bestDist[level] || 0)) save.bestDist[level] = Math.floor(run.dist);
+  const keep = save.missions.filter((m, i) => !run.missions[i].done);
+  while (keep.length < 3) keep.push(newMission(keep.map(m => m.type)));
+  save.missions = keep;
+  writeSave();
+  lastTally = T;
+}
 function endRun() {
   mode = 'over'; SFX.silence();
   const total = score(); run.newBest = total > best;
   if (run.newBest) { best = total; try { localStorage.setItem(bestKey(), String(best)); } catch (e) { /* ignore */ } }
+  finishRun();
   showCard('over');
 }
 
 /* ---------- scoring helpers ---------- */
 const mult = () => Math.min(1 + Math.floor(run.combo / 3), 8);
 function award(pts, label, color, comboInc = 1) {
-  run.combo += comboInc; run.comboT = 5;
-  const p = Math.round(pts * mult());
+  const m0 = mult();
+  run.combo += comboInc; run.comboMax = 5 + 0.8 * U('combo'); run.comboT = run.comboMax;
+  const m1 = mult(); run.maxMult = Math.max(run.maxMult, m1);
+  const p = Math.round(pts * m1 * (1 + 0.08 * U('score')));
   run.bonus += p;
   popup(`${label} +${p}`, color);
+  if (m1 > m0) { popup(`COMBO x${m1}!`, m1 >= 4 ? '#e8412c' : '#3a7bd5', 30); SFX.combo(m1); }
 }
 function popup(text, color = '#16324a', size = 22) { popups.push({ text, color, size, age: 0 }); if (popups.length > 6) popups.shift(); }
 
@@ -440,7 +630,7 @@ function popup(text, color = '#16324a', size = 22) { popups.push({ text, color, 
 function crash(why) {
   sk.hearts--; sk.tumble = 0.7; sk.invuln = 2.0; sk.spin = 0; sk.spinAccum = 0;
   sk.speed *= 0.4; sk.vx *= 0.4; sk.vy *= 0.4; sk.wax = 0;
-  run.combo = 0; run.shake = 14;
+  run.combo = 0; run.shake = 14; run.lastCrashM = run.dist;
   burst(sk.x, sk.y, 26, 220);
   SFX.crash();
   popup(why || 'OUCH!', '#d9301d', 28);
@@ -465,7 +655,7 @@ function land() {
   burst(sk.x, sk.y, wasLong ? 12 : 4, 140);
   SFX.land(spins > 0);
   if (spins > 0) {
-    run.tricks++; run.bestTrick = Math.max(run.bestTrick, spins);
+    run.tricks++; run.spinsTotal += spins; run.bestTrick = Math.max(run.bestTrick, spins);
     award(150 * spins * spins, `${spins * 360}° CLEAN`, '#e8412c', 1 + spins);
   } else if (airT > 0.7) award(Math.round(airT * 60), 'BIG AIR', '#3a7bd5');
   sk.spin = 0; sk.spinAccum = 0;
@@ -474,13 +664,44 @@ function gatePass(o) {
   const dx = Math.abs(sk.x - o.x);
   if (dx < o.half - 6) {
     o.ok = true; run.gates++;
-    const perfect = dx < 16;
+    const perfect = dx < 16; if (perfect) run.perfect++;
     award(perfect ? 100 : 50, perfect ? 'PERFECT GATE' : 'GATE', perfect ? '#e8412c' : '#3a7bd5');
     run.avalY -= 60; SFX.gate(perfect);
   } else {
     o.miss = true; run.missed++;
     if (run.combo > 0) popup('GATE MISSED', '#7a8a99', 20);
     run.combo = 0;
+  }
+}
+const COIN_COLORS = ['#ff5a4d', '#ffb400', '#3fd17a', '#3fa7ff', '#b06cff', '#ffffff'];
+function confetti(x, y, n) {
+  for (let i = 0; i < n && particles.length < 520; i++) {
+    const a = Math.random() * TAU, v = 60 + Math.random() * 220;
+    particles.push({ x, y, z: 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.5, vz: 180 + Math.random() * 320, life: 0, max: 1 + Math.random() * 0.9,
+                     size: 2.4 + Math.random() * 2.6, col: COIN_COLORS[i % COIN_COLORS.length] });
+  }
+}
+function collectCoin(o) {
+  const v = (o.gold ? 5 : 1) * (1 + 0.15 * U('gold'));          // kept exact (shown rounded down) so every Gold Digger level counts
+  run.coins += v; run.coinBump = 1; run.coinT = 1.3; run.coinStreak++;
+  SFX.coin(run.coinStreak);
+  if (o.gold) popup(`+${Math.round(v)} coins`, '#b9830a', 22);
+}
+function milestone(m) {
+  run.coins += 5; SFX.milestone();
+  popup(`${fmt(m)} m!  +5 coins`, '#3a7bd5', 26);
+  if (m % 1000 === 0) { confetti(sk.x, sk.y, 36); run.flash = 0.45; }
+}
+function recordBreak() {
+  run.recordBonus = 50; run.flash = 0.7; run.shake = Math.max(run.shake, 6);
+  confetti(sk.x, sk.y, 90); SFX.record();
+  popup('NEW RECORD!  +50', '#e8412c', 34);
+}
+function checkMissions() {
+  for (const m of run.missions) {
+    if (m.done || MISSIONS[m.type].get() < m.target) continue;
+    m.done = true; confetti(sk.x, sk.y, 50); run.flash = 0.35; SFX.mission();
+    popup(`MISSION COMPLETE!  +${m.reward}`, '#2fb457', 30);
   }
 }
 function gapTo(o) {
@@ -499,8 +720,9 @@ function nearMiss(o) {
 function step(dt) {
   const inp = readInput();
   run.time += dt;
-  if (inp.trick && !sk.trickPrev && !(sk.z > 0 || sk.vz > 0) && !sk.tumble && !sk.buried) {   // tap Space on the ground: hop
-    sk.vz = 250; sk.z = 0.01; sk.airT = 0; sk.spin = 0; sk.spinAccum = 0; SFX.jump();
+  hopReq = Math.max(0, hopReq - dt);
+  if (((inp.trick && !sk.trickPrev) || hopReq > 0) && !(sk.z > 0 || sk.vz > 0) && !sk.tumble && !sk.buried) {   // tap Space on the ground: hop
+    hopReq = 0; sk.vz = 250; sk.z = 0.01; sk.airT = 0; sk.spin = 0; sk.spinAccum = 0; SFX.jump();
   }
   sk.trickPrev = !!inp.trick;
   const air = sk.z > 0 || sk.vz > 0;
@@ -526,6 +748,11 @@ function step(dt) {
     if (sk.z <= 0 && sk.vz < 0) land();
   }
   run.dist = Math.max(run.dist, sk.y / PX_PER_M);
+  if (!sk.buried) {
+    while (run.dist >= run.nextMS) { milestone(run.nextMS); run.nextMS += 500; }
+    if (run.coinT > 0 && (run.coinT -= dt) <= 0) run.coinStreak = 0;
+    checkMissions();
+  }
   run.topSpeed = Math.max(run.topSpeed, Math.hypot(sk.vx, sk.vy));
 
   // world interaction
@@ -534,7 +761,7 @@ function step(dt) {
 
   // avalanche
   const m = sk.y / PX_PER_M;
-  run.avalSpeed = 240 + Math.min(m * 0.015, 90) + LV().aval;          // tops out at 330: always beatable by clean skiing
+  run.avalSpeed = Math.max(140, 240 + Math.min(m * 0.015, 90) + LV().aval - 10 * U('cold'));          // tops out at 330: always beatable by clean skiing
   run.avalY = Math.max(run.avalY + run.avalSpeed * dt, sk.y - 1500);   // clean skiing builds a buffer of ~4-6 s, up to this cap
   const gapNow = sk.y - run.avalY;
   run.danger = clamp(1 - gapNow / 450, 0, 1);
@@ -560,7 +787,7 @@ function steer(inp, air, dt) {
     const target = Math.round(sk.spin / TAU) * TAU;
     sk.spin += (target - sk.spin) * (1 - Math.exp(-7 * dt));
   }
-  let tr = 3.0 * (1 - 0.35 * clamp(sk.speed / 700, 0, 1));
+  let tr = 3.0 * (1 - 0.35 * clamp(sk.speed / 700, 0, 1)) * (1 + 0.06 * U('turn'));
   if (sk.tuck) tr *= 0.6;
   if (inp.brake && !air) tr *= 1.35;
   if (air) tr *= 0.5;
@@ -603,10 +830,12 @@ function interact() {
       case 'cocoa': case 'wax':
         if (!o.done && sk.z < 45 && Math.hypot(dx, dy) < 28) {
           o.done = true; SFX.pickup();
-          if (o.t === 'cocoa') { if (sk.hearts < 3) { sk.hearts++; popup('+1 HEART', '#d9301d', 24); } else award(100, 'COCOA', '#8a5a3a', 0); }
-          else { sk.wax = 6; popup('HOT WAX! SPEED UP', '#e08a00', 24); }
+          if (o.t === 'cocoa') { if (sk.hearts < maxHearts()) { sk.hearts++; popup('+1 HEART', '#d9301d', 24); } else award(100, 'COCOA', '#8a5a3a', 0); }
+          else { sk.waxMax = 6 + 1.5 * U('wax'); sk.wax = sk.waxMax; popup('HOT WAX! SPEED UP', '#e08a00', 24); }
         } break;
       case 'gate': if (!o.done && sk.y >= o.y) { o.done = true; gatePass(o); } break;
+      case 'coin': if (!o.done && Math.abs(sk.z - o.z) < 40 && Math.hypot(dx, dy) < 28 + 16 * U('magnet')) { o.done = true; collectCoin(o); } break;
+      case 'record': if (!o.done && sk.y >= o.y) { o.done = true; if (!run.recordDone) { run.recordDone = true; recordBreak(); } } break;
       default: {
         if (o.zh < 0) break;
         if (sk.z < o.zh) {                       // tall enough to block you at this height
@@ -652,6 +881,7 @@ function updateFx(dt) {
   cam.x = lerp(cam.x, sk.x + sk.vx * 0.12 + bend * 0.3, 1 - Math.exp(-6 * dt));
   cam.roll = lerp(cam.roll, -sk.heading * 0.03 * (sk.z > 0 ? 0.4 : 1), 1 - Math.exp(-5 * dt));
   run.shake *= Math.exp(-6 * dt);
+  run.flash = Math.max(0, run.flash - dt * 1.6); run.coinBump = Math.max(0, run.coinBump - dt * 4);
   if (playing) {
     const danger = run.danger;
     run.shake = Math.max(run.shake, danger * danger * 6);
@@ -678,6 +908,7 @@ function updateFx(dt) {
   }
 }
 let sprayAcc = 0;
+function sprayCol() { const t = trailStyle(); return t.rainbow ? `hsl(${(run.time * 240) % 360},90%,62%)` : t.col || null; }
 function spray(dt) {
   if (sk.z > 0 || sk.tumble > 0 || sk.buried || sk.speed < 80) return;
   const slip = Math.abs(Math.sin(sk.heading)), side = Math.sign(sk.heading) || 1;
@@ -686,7 +917,7 @@ function spray(dt) {
   while (sprayAcc >= 1 && particles.length < 500) {
     sprayAcc -= 1;
     const tx = sk.x - Math.sin(sk.heading) * 12, ty = sk.y - Math.cos(sk.heading) * 12;
-    particles.push({ x: tx, y: ty, z: 2, vx: -side * (40 + Math.random() * 90) * (0.4 + slip * 1.6) + (Math.random() - .5) * (braking ? 150 : 30), vy: -sk.vy * 0.15 + (Math.random() - .5) * 30,
+    particles.push({ col: sprayCol(), x: tx, y: ty, z: 2, vx: -side * (40 + Math.random() * 90) * (0.4 + slip * 1.6) + (Math.random() - .5) * (braking ? 150 : 30), vy: -sk.vy * 0.15 + (Math.random() - .5) * 30,
                      vz: 20 + Math.random() * 60, life: 0, max: 0.3 + Math.random() * 0.3, size: 1.5 + Math.random() * 2.2 });
   }
 }
@@ -774,6 +1005,27 @@ function drawFar(o, x, y, k) {
   }
   return false;
 }
+function drawCoin(o, t) {
+  const sp = Math.abs(Math.cos(t * 3.2 + o.seed)), s = o.gold ? 1.5 : 1, cy = -(o.z + 15 * s), rx = Math.max(2, 9 * s * sp);
+  ctx.fillStyle = 'rgba(60,90,130,.2)'; ell(2, 1, 8 * s, 3 * s);
+  ctx.fillStyle = o.gold ? '#ffb400' : '#f2b01e'; ell(0, cy, rx, 9 * s);
+  ctx.fillStyle = '#ffe27a'; ell(0, cy, Math.max(1, 5.5 * s * sp), 5.5 * s);
+  ctx.strokeStyle = '#b9830a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(0, cy, rx, 9 * s, 0, 0, TAU); ctx.stroke();
+}
+/* A banner across the lane at your best distance: the thing to beat. */
+function drawRecord(o, t) {
+  const dz = o.y - cam.y, k = F / dz, hw = o.half;
+  ctx.globalAlpha = fogA(dz);
+  const bL = P(o.x - hw, o.y, 0), bR = P(o.x + hw, o.y, 0), tL = P(o.x - hw, o.y, 150), tR = P(o.x + hw, o.y, 150), mL = P(o.x - hw, o.y, 104), mR = P(o.x + hw, o.y, 104);
+  ctx.strokeStyle = '#3b4a5a'; ctx.lineWidth = Math.max(2, 7 * k); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(bL[0], bL[1]); ctx.lineTo(tL[0], tL[1]); ctx.moveTo(bR[0], bR[1]); ctx.lineTo(tR[0], tR[1]); ctx.stroke();
+  ctx.fillStyle = o.done ? '#2fb457' : '#f2b01e'; poly([tL, tR, mR, mL]);
+  ctx.strokeStyle = o.done ? '#1b7a38' : '#8a5a00'; ctx.lineWidth = Math.max(1.5, 3 * k);
+  ctx.beginPath(); ctx.moveTo(tL[0], tL[1]); ctx.lineTo(tR[0], tR[1]); ctx.lineTo(mR[0], mR[1]); ctx.lineTo(mL[0], mL[1]); ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = o.done ? '#fff' : '#3b2a00'; ctx.font = `900 ${Math.max(8, 30 * k)}px system-ui,-apple-system,sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(o.done ? 'NEW RECORD!' : `YOUR BEST · ${fmt(o.m)} m`, (tL[0] + tR[0]) / 2, (tL[1] + mL[1]) / 2, (mR[0] - mL[0]) * 0.92);
+  ctx.textBaseline = 'alphabetic'; ctx.globalAlpha = 1;
+}
 function drawMogul(o) {
   const dz = Math.max(o.y - cam.y, 60), k = F / dz;
   ctx.save(); ctx.translate(W / 2 + (o.x - cam.x) * k, HOR + HC * k); ctx.scale(k, k * Math.min(0.9, HC / dz * 2.2)); ctx.globalAlpha = fogFar(dz);
@@ -848,7 +1100,7 @@ function drawCrosser(o, x, y, t) {
 /* The skier, seen from behind and above (facing down the slope). */
 function drawSkier() {
   const k = F / BACK, v = HC / BACK, x = W / 2 + (sk.x - cam.x) * k, gy = HOR + HC * k;
-  const lift = sk.z, tumbling = sk.tumble > 0;
+  const J = jacket(), lift = sk.z, tumbling = sk.tumble > 0;
   if (sk.invuln > 0 && !tumbling && Math.floor(run.time * 14) % 2 === 0) ctx.globalAlpha = 0.45;
   ctx.save(); ctx.translate(x, gy); ctx.scale(k, k * v);                       // ground shadow, flattened
   const sh = 1 / (1 + lift / 160);
@@ -865,7 +1117,7 @@ function drawSkier() {
     ctx.translate(0, -12); ctx.rotate(sk.tumRot);
     ctx.strokeStyle = '#1d242e'; ctx.lineWidth = 3.6;
     ctx.beginPath(); ctx.moveTo(-19, -9); ctx.lineTo(15, 12); ctx.moveTo(16, -10); ctx.lineTo(-14, 13); ctx.stroke();
-    ctx.fillStyle = '#e8412c'; ell(0, 0, 8.5, 10); ctx.fillStyle = '#2a2f3a'; ell(0, -12, 6, 6);
+    ctx.fillStyle = J.main; ell(0, 0, 8.5, 10); ctx.fillStyle = '#2a2f3a'; ell(0, -12, 6, 6);
   } else {
     const a = sk.heading + sk.spin, sa = Math.sin(a), ca = Math.cos(a);
     const feet = [];
@@ -873,7 +1125,7 @@ function drawSkier() {
       const ol = ca * 4.8 * sd, od = -sa * 4.8 * sd;
       ctx.strokeStyle = '#1d242e'; ctx.lineWidth = 3.8; ctx.beginPath();
       ctx.moveTo(ol - sa * 19, -v * (od - ca * 19)); ctx.lineTo(ol + sa * 19, -v * (od + ca * 19)); ctx.stroke();
-      ctx.strokeStyle = '#e8412c'; ctx.beginPath();
+      ctx.strokeStyle = J.main; ctx.beginPath();
       ctx.moveTo(ol + sa * 13, -v * (od + ca * 13)); ctx.lineTo(ol + sa * 19, -v * (od + ca * 19)); ctx.stroke();
       feet.push([ol, -v * od - 1]);
     }
@@ -885,10 +1137,11 @@ function drawSkier() {
       ctx.strokeStyle = '#9fb0c2'; ctx.lineWidth = 1.7; ctx.beginPath();
       ctx.moveTo(-7 * ac + lean, ty - 2); ctx.lineTo(-16 * ac, 8); ctx.moveTo(7 * ac + lean, ty - 2); ctx.lineTo(16 * ac, 8); ctx.stroke();
     }
-    ctx.fillStyle = bk ? '#e8412c' : '#c2331f'; ell(lean, ty, 7.8 * ac, th * 0.85);
-    if (bk) { ctx.fillStyle = '#b92c1a'; ell(lean, ty + 1, 5 * ac, th * 0.55); ctx.fillStyle = '#fff'; ctx.fillRect(lean - 6.5 * ac, ty - th * 0.5, 13 * ac, 2.4); }
+    ctx.fillStyle = bk ? J.main : J.front; ell(lean, ty, 7.8 * ac, th * 0.85);
+    if (J.shiny) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ell(lean - 2.5 * ac, ty - 3, 2 * ac, 4.5); }
+    if (bk) { ctx.fillStyle = J.dark; ell(lean, ty + 1, 5 * ac, th * 0.55); ctx.fillStyle = '#fff'; ctx.fillRect(lean - 6.5 * ac, ty - th * 0.5, 13 * ac, 2.4); }
     ctx.fillStyle = '#2a2f3a'; ell(lean, hy, 5.8, 5.8);
-    if (bk) { ctx.fillStyle = '#e8412c'; ctx.fillRect(lean - 0.9, hy - 5.6, 1.8, 5); }
+    if (bk) { ctx.fillStyle = J.main; ctx.fillRect(lean - 0.9, hy - 5.6, 1.8, 5); }
     else { ctx.fillStyle = '#f2c9a0'; ell(lean, hy + 1, 3.6 * ac, 3.2); ctx.fillStyle = '#ffcf4a'; ctx.fillRect(lean - 4 * ac, hy - 1.2, 8 * ac, 3); }
   }
   ctx.restore(); ctx.globalAlpha = 1;
@@ -934,15 +1187,19 @@ function drawBackdrop(m) {
   ctx.fillStyle = fog; ctx.fillRect(-200, HOR, W + 400, H * 0.2);
 }
 function drawTrail() {
-  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(112,145,182,.6)'; ctx.lineJoin = 'round';
+  const ts = trailStyle();
+  ctx.lineWidth = ts.id === 'snow' ? 2 : 2.8; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   for (const side of [-1, 1]) {
-    ctx.beginPath(); let pen = false;
-    for (const p of trail) {
+    ctx.strokeStyle = ts.rainbow ? 'hsl(0,90%,58%)' : ts.col || 'rgba(112,145,182,.6)';
+    ctx.beginPath(); let pen = false, n = 0;
+    for (let i = 0; i < trail.length; i++) {
+      const p = trail[i];
       if (!p) { pen = false; continue; }
       const wx = p.x + Math.cos(p.a) * 3.8 * side, wy = p.y - Math.sin(p.a) * 3.8 * side, dz = wy - cam.y;
       if (dz < 30) { pen = false; continue; }
       const k = F / dz, x = W / 2 + (wx - cam.x) * k, y = HOR + HC * k;
       if (pen) ctx.lineTo(x, y); else { ctx.moveTo(x, y); pen = true; }
+      if (ts.rainbow && ++n % 6 === 0) { ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); ctx.strokeStyle = `hsl(${(i * 9) % 360},90%,58%)`; }
     }
     ctx.stroke();
   }
@@ -989,12 +1246,23 @@ function drawHUD() {
   const pad = 14, kmh = Math.hypot(sk.vx, sk.vy) * 0.18;
   text(fmt(score()), pad, 44, 38, '#16324a');
   text(`${fmt(run.dist)} m  ·  ${Math.round(kmh)} km/h`, pad, 66, 15, '#3b5873', 'left', 700);
-  for (let i = 0; i < 3; i++) heart(pad + 14 + i * 30, 90, 11, i < sk.hearts);
-  if (sk.wax > 0) { ctx.fillStyle = 'rgba(22,50,74,.25)'; ctx.fillRect(pad + 100, 83, 70, 8); ctx.fillStyle = '#f0a020'; ctx.fillRect(pad + 100, 83, 70 * sk.wax / 6, 8); }
+  const mh = maxHearts(); for (let i = 0; i < mh; i++) heart(pad + 14 + i * 30, 90, 11, i < sk.hearts);
+  if (sk.wax > 0) { const wx = pad + 14 + mh * 30 + 4; ctx.fillStyle = 'rgba(22,50,74,.25)'; ctx.fillRect(wx, 83, 70, 8); ctx.fillStyle = '#f0a020'; ctx.fillRect(wx, 83, 70 * sk.wax / sk.waxMax, 8); }
   if (run.combo > 0) {
     text(`x${mult()}`, pad, 128, 30, mult() >= 4 ? '#e8412c' : '#3a7bd5');
-    ctx.fillStyle = 'rgba(22,50,74,.25)'; ctx.fillRect(pad + 50, 114, 70, 7); ctx.fillStyle = '#3a7bd5'; ctx.fillRect(pad + 50, 114, 70 * clamp(run.comboT / 5, 0, 1), 7);
+    ctx.fillStyle = 'rgba(22,50,74,.25)'; ctx.fillRect(pad + 50, 114, 70, 7); ctx.fillStyle = '#3a7bd5'; ctx.fillRect(pad + 50, 114, 70 * clamp(run.comboT / run.comboMax, 0, 1), 7);
     text(`${run.combo} chain`, pad + 50, 106, 12, '#3b5873', 'left', 700);
+  }
+  // coins (top right) and the unfinished mission that is closest to done (left, under the hearts)
+  {
+    const cxr = W - 108 * cssU, str = fmt(run.coins);
+    text(str, cxr, 78, 24 * (1 + 0.3 * run.coinBump), '#8a5a00', 'right', 900);
+    const tw = ctx.measureText(str).width;
+    ctx.fillStyle = '#f2b01e'; ell(cxr - tw - 15, 70, 9.5, 9.5); ctx.fillStyle = '#ffe27a'; ell(cxr - tw - 15, 70, 5.5, 5.5);
+    let mm = null, mr = -1;
+    for (const m of run.missions) { if (m.done) continue; const r = clamp(MISSIONS[m.type].get() / m.target, 0, 1); if (r > mr) { mr = r; mm = m; } }
+    if (mm) text(`◎ ${MISSIONS[mm.type].text(mm.target)}  ${fmt(Math.min(mm.target, Math.floor(MISSIONS[mm.type].get())))}/${fmt(mm.target)}`, pad, 154, 13, '#3b5873', 'left', 700);
+    else text('◎ All missions complete!', pad, 154, 13, '#2fb457', 'left', 800);
   }
   // avalanche proximity meter (top centre)
   const mw = Math.min(260, W * 0.34), mx = W / 2 - mw / 2, gap = sk.y - run.avalY, fill = clamp(1 - gap / 1100, 0, 1);
@@ -1066,6 +1334,7 @@ function render() {
     const dz = o.y - cam.y, k = F / dz, y = HOR + HC * k;
     ctx.globalAlpha = fogA(dz);
     if (o.t === 'gate') { drawGate(o, dz, k, y, tt); ctx.globalAlpha = 1; continue; }
+    if (o.t === 'record') { drawRecord(o, tt); continue; }
     if (k < 0.38 && drawFar(o, W / 2 + (o.x - cam.x) * k, y, k)) continue;
     ctx.save(); ctx.translate(W / 2 + (o.x - cam.x) * k, y); ctx.scale(k, k);
     switch (o.t) {
@@ -1075,6 +1344,7 @@ function render() {
       case 'log': drawLog(o, 0, 0); break;
       case 'stump': drawStump(0, 0); break;
       case 'cocoa': if (!o.done) drawCocoa(0, 0, tt); break;
+      case 'coin': if (!o.done) drawCoin(o, tt); break;
       case 'wax': if (!o.done) drawWax(0, 0, tt); break;
       case 'crosser': drawCrosser(o, 0, 0, tt); break;
     }
@@ -1086,7 +1356,7 @@ function render() {
   for (const p of particles) {
     const dz = p.y - cam.y; if (dz < NEAR - 20) continue;
     const k = F / dz, life = 1 - p.life / p.max;
-    ctx.globalAlpha = clamp(life * 1.4, 0, 1);
+    ctx.fillStyle = p.col || 'rgba(255,255,255,.95)'; ctx.globalAlpha = clamp(life * 1.4, 0, 1);
     ctx.beginPath(); ctx.arc(W / 2 + (p.x - cam.x) * k, HOR + (HC - p.z) * k, Math.max(0.6, p.size * k * (0.5 + life * 0.5)), 0, TAU); ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -1094,11 +1364,15 @@ function render() {
   ctx.restore();
   drawFlakes();
   drawVignette();
+  if (run.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(0.8, run.flash)})`; ctx.fillRect(0, 0, W, H); }
   if (mode !== 'title') { drawHUD(); drawPopups(); }
 }
 
 /* ---------- menus ---------- */
 const overlay = document.getElementById('overlay'), card = document.getElementById('card');
+let shopOpen = false, shopFrom = 'title', cardTimers = [], boughtId = null, resetArmed = false;
+const later = (fn, ms) => cardTimers.push(setTimeout(fn, ms));
+const cn = n => `<span class="cn"></span>${fmt(n)}`;
 const KEYS_HTML = `
   <div class="keys">
     <div><kbd>←</kbd><kbd>→</kbd> / <kbd>A</kbd><kbd>D</kbd></div><div>Steer. Straight down is fastest; sideways is slow.</div>
@@ -1110,44 +1384,141 @@ const KEYS_HTML = `
 const TIPS_HTML = `
   <ul class="tips">
     <li>Everything is solid. Hit a tree, rock or log and you stop dead, tumble and lose a heart. Find the open line, and keep your speed up: the <b>avalanche</b> is behind you and gains whenever you stall or crash, but a clean run pulls away and can go on forever.</li>
+    <li><b>Coins</b> line the open path, float over logs (hop for them) and arc along ramp jumps. Spend them in the shop on upgrades and looks.</li>
     <li><b>Gates</b> chain a combo (centre of the gate pays double). <b>Close calls</b> past trees and rocks at speed add to it. A crash breaks it.</li>
     <li><b>Ramps</b> launch you high enough to clear rocks and logs, but never trees. Land mid-spin and you wipe out.</li>
     <li>Ice won't let you turn. Cocoa heals, wax is a speed boost.</li>
   </ul>`;
-function levelPicker() {
-  return `<div class="seg" role="group" aria-label="Difficulty">${Object.keys(LEVELS).map(k => `<button data-lv="${k}" class="${k === level ? 'on' : ''}">${LEVELS[k].label}</button>`).join('')}</div>`;
+const levelPicker = () => `<div class="seg" role="group" aria-label="Difficulty">${Object.keys(LEVELS).map(k => `<button data-lv="${k}" class="${k === level ? 'on' : ''}">${LEVELS[k].label}${LEVELS[k].pay > 1 ? ' ×' + LEVELS[k].pay : ''}</button>`).join('')}</div>`;
+const missionsHtml = list => list.map(m => `<div class="mission"><span>${MISSIONS[m.type].text(m.target)}</span><b>${cn(m.reward)}</b></div>`).join('');
+const bestLine = () => `Best (${LV().label}): ${fmt(best)} · ${fmt(save.bestDist[level] || 0)} m${isTouch ? '' : ' · press Space'}`;
+function nextGoal() {
+  let g = null;
+  for (const u of UPGRADES) { const l = U(u.id); if (l >= u.max) continue; const c = costOf(u, l); if (!g || c < g.cost) g = { name: `${u.name} ${['I', 'II', 'III', 'IV', 'V'][l]}`, cost: c }; }
+  return g;
 }
-function showCard(kind) {
-  const total = score();
-  if (kind === 'title') {
-    card.innerHTML = `<h1>AVALANCHE <span>RUN</span></h1><p class="tag">Outrun the mountain.</p>${KEYS_HTML}${TIPS_HTML}
-      ${levelPicker()}<br><button class="primary" id="goBtn">START</button><div class="best">Best (${LV().label}): ${fmt(best)}${isTouch ? '' : ' · press Space'}</div>`;
-  } else if (kind === 'paused') {
-    card.innerHTML = `<h1>PAUSED</h1>${KEYS_HTML}<button class="primary" id="goBtn">RESUME</button>`;
-  } else {
-    const buried = run.cause === 'buried';
-    card.innerHTML = `<h1>${buried ? 'BURIED' : 'WIPED <span>OUT</span>'}</h1>
-      <p class="tag">${buried ? 'The avalanche caught you.' : 'Out of hearts.'}</p>
-      ${run.newBest ? '<p class="newbest">★ NEW BEST ★</p>' : ''}
-      <div class="stats">
-        <div class="stat"><b>${fmt(total)}</b><small>Score</small></div>
-        <div class="stat"><b>${fmt(run.dist)} m</b><small>Distance</small></div>
-        <div class="stat"><b>${fmt(best)}</b><small>Best · ${LV().label}</small></div>
-        <div class="stat"><b>${run.gates}<small style="font-size:12px;opacity:.6"> / ${run.gates + run.missed}</small></b><small>Gates</small></div>
-        <div class="stat"><b>${run.tricks}${run.bestTrick ? `<small style="font-size:12px;opacity:.6"> (best ${run.bestTrick * 360}°)</small>` : ''}</b><small>Tricks</small></div>
-        <div class="stat"><b>${run.closeCalls}</b><small>Close calls</small></div>
-      </div>
-      ${levelPicker()}<br><button class="primary" id="goBtn">GO AGAIN</button>${isTouch ? '' : '<div class="best">press Space</div>'}`;
-  }
+const canAfford = () => { const g = nextGoal(); return !!g && save.coins >= g.cost; };
+const shopBtn = () => `<button class="secondary" id="shopBtn">SHOP${canAfford() ? '<span class="dot"></span>' : ''}</button>`;
+function countUp(el, to, delayMs, durMs) {
+  const t0 = performance.now() + delayMs;
+  (function tick(now) {
+    if (!el.isConnected) return;
+    const k = clamp((now - t0) / durMs, 0, 1);
+    el.textContent = fmt(to * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+
+function titleCard() {
+  const p = levelProgress(save.xp);
+  return `<h1>AVALANCHE <span>RUN</span></h1><p class="tag">Outrun the mountain.</p>
+    <div class="badges"><span class="badge coin">${fmt(save.coins)}</span><span class="badge">Skier Lv ${p.L}</span>${save.streak > 1 ? `<span class="badge">🔥 ${save.streak}-day streak</span>` : ''}</div>
+    <div class="xp"><i style="width:${(p.frac * 100).toFixed(1)}%"></i></div>
+    <div class="missions"><h3>Missions</h3>${missionsHtml(save.missions)}</div>
+    ${levelPicker()}<br>
+    <div class="foot"><div class="row2"><button class="primary" id="goBtn">START</button>${shopBtn()}</div></div>
+    <details class="how"><summary>How to play</summary>${KEYS_HTML}${TIPS_HTML}</details>
+    <div class="best">${bestLine()}</div>`;
+}
+function overCard(T, animate) {
+  const buried = run.cause === 'buried', n = T.lines.length;
+  const dly = i => animate ? `style="animation-delay:${(i * 0.32).toFixed(2)}s"` : 'style="animation:none;opacity:1"';
+  const rows = T.lines.map((l, i) => `<div class="t ${l.cls}" ${dly(i)}><span>${l.label}</span><b>+${fmt(l.v)}</b></div>`).join('');
+  const g = nextGoal(), ready = g && save.coins >= g.cost;
+  const goal = g ? `<div class="nextgoal${ready ? ' ready' : ''}">${ready ? `<b>You can afford ${g.name}!</b> Open the shop.` : `Next upgrade: <b>${g.name}</b> · ${cn(save.coins)} / ${cn(g.cost)}`}
+      <div class="bar"><i style="width:${clamp(save.coins / g.cost, 0, 1) * 100}%"></i></div></div>` : '';
+  return `<h1>${buried ? 'BURIED' : 'WIPED <span>OUT</span>'}</h1>
+    <p class="tag">${buried ? 'The avalanche caught you.' : 'Out of hearts.'}</p>
+    ${run.newBest ? '<p class="newbest">★ NEW BEST ★</p>' : ''}
+    <div class="stats">
+      <div class="stat"><b>${fmt(score())}</b><small>Score</small></div>
+      <div class="stat"><b>${fmt(run.dist)} m</b><small>Distance</small></div>
+      <div class="stat"><b>${fmt(best)}</b><small>Best · ${LV().label}</small></div>
+    </div>
+    <div class="tally">${rows}<div class="t total" ${dly(n)}><span>Total earned</span><b>+<span id="totalVal">${animate ? 0 : fmt(T.total)}</span></b></div></div>
+    <div class="lv">Skier Lv <b id="lvNum">${animate ? T.lvBefore : T.lvAfter}</b> <span class="lvlup" id="lvUp" style="display:none">LEVEL UP!</span></div>
+    <div class="xp"><i id="xpBar" style="width:${((animate ? T.fracBefore : T.fracAfter) * 100).toFixed(1)}%"></i></div>
+    ${goal}
+    <div class="missions"><h3>Missions</h3>${missionsHtml(save.missions)}</div>
+    ${levelPicker()}<br>
+    <div class="foot"><div class="row2"><button class="primary" id="goBtn">GO AGAIN</button>${shopBtn()}</div>${isTouch ? '' : '<div class="best">press Space</div>'}</div>`;
+}
+function playTally(T) {
+  const n = T.lines.length, step = 320;
+  for (let i = 0; i <= n; i++) later(() => SFX.tick(i), 100 + i * step);
+  const tv = document.getElementById('totalVal'); if (tv) countUp(tv, T.total, n * step, 900);
+  const bar = document.getElementById('xpBar'), lvNum = document.getElementById('lvNum'), lvUp = document.getElementById('lvUp');
+  const t = (n + 1) * step + 700, up = T.lvAfter > T.lvBefore;
+  later(() => { if (bar) bar.style.width = (up ? 100 : T.fracAfter * 100) + '%'; }, t);
+  if (up) later(() => {
+    if (!bar) return;
+    bar.style.transition = 'none'; bar.style.width = '0%'; void bar.offsetWidth; bar.style.transition = '';
+    bar.style.width = (T.fracAfter * 100) + '%'; lvNum.textContent = T.lvAfter; lvUp.style.display = 'inline';
+    SFX.levelup(); confetti(sk.x, sk.y, 80); run.flash = 0.5;
+  }, t + 1100);
+}
+function shopCard() {
+  const rows = UPGRADES.map(u => {
+    const l = U(u.id), maxed = l >= u.max, c = maxed ? 0 : costOf(u, l);
+    const pips = Array.from({ length: u.max }, (_, i) => `<i class="${i < l ? 'on' : ''}"></i>`).join('');
+    return `<div class="shoprow${boughtId === u.id ? ' pop' : ''}"><div class="ic">${u.icon}</div>
+      <div><div class="nm">${u.name}<span class="pips">${pips}</span></div><div class="fx">${u.fx(l)}${maxed ? '' : ` → <b>${u.fx(l + 1)}</b>`}</div></div>
+      <button class="buy${maxed ? ' max' : ''}" data-up="${u.id}" ${maxed || save.coins < c ? 'disabled' : ''}>${maxed ? 'MAXED' : cn(c)}</button></div>`;
+  }).join('');
+  const sw = (list, owned, eq, attr, dot) => list.map(x => `<button class="sw${eq === x.id ? ' eq' : ''}${boughtId === x.id ? ' pop' : ''}" data-${attr}="${x.id}">
+      <div class="dot" style="background:${dot(x)}"></div>${x.name}<small>${eq === x.id ? 'Equipped' : owned.includes(x.id) ? 'Owned' : cn(x.cost)}</small></button>`).join('');
+  const jDot = j => j.shiny ? `linear-gradient(135deg,#fff3a8,${j.main} 45%,${j.dark})` : j.main;
+  const tDot = t => t.rainbow ? 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)' : t.col || '#dbe6f1';
+  return `<div class="shop"><h1>SHOP</h1>
+    <div class="badges"><span class="badge coin">${fmt(save.coins)}</span><span class="badge">Skier Lv ${levelProgress(save.xp).L}</span></div>
+    <h2>Upgrades</h2>${rows}
+    <h2>Jackets</h2><div class="swatches">${sw(JACKETS, save.jackets, save.jacket, 'jacket', jDot)}</div>
+    <h2>Ski trails</h2><div class="swatches">${sw(TRAILS, save.trails, save.trail, 'trail', tDot)}</div>
+    <button class="linkbtn" id="resetBtn">${resetArmed ? 'Tap again to erase all progress' : 'Reset progress'}</button>
+    <div class="foot"><div class="row2"><button class="primary" id="backBtn">BACK</button></div></div></div>`;
+}
+function showCard(kind, opts = {}) {
+  cardTimers.forEach(clearTimeout); cardTimers = [];
+  shopOpen = kind === 'shop';
+  const st = overlay.scrollTop;
+  if (kind === 'title') card.innerHTML = titleCard();
+  else if (kind === 'paused') card.innerHTML = `<h1>PAUSED</h1>${KEYS_HTML}<button class="primary" id="goBtn">RESUME</button>`;
+  else if (kind === 'shop') card.innerHTML = shopCard();
+  else { const animate = opts.animate !== false; card.innerHTML = overCard(lastTally, animate); if (animate) playTally(lastTally); }
   overlay.classList.remove('hidden');
-  card.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  overlay.scrollTop = kind === 'shop' && opts.keepScroll ? st : 0;
+  card.onclick = onCardClick;
+}
+function buy(list, key, id, attr) {
+  const item = list.find(x => x.id === id); if (!item) return;
+  if (save[key + 's'].includes(id)) { save[key] = id; SFX.tick(4); }                  // already owned: equip
+  else if (save.coins >= item.cost) { save.coins -= item.cost; save[key + 's'].push(id); save[key] = id; SFX.buy(); }
+  else { SFX.nope(); return; }
+  boughtId = id; writeSave(); showCard('shop', { keepScroll: true });
+}
+function onCardClick(e) {
+  const b = e.target.closest('button'); if (!b) return;
+  SFX.init();
+  if (b.dataset.lv) {
     setLevel(b.dataset.lv);
     card.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x.dataset.lv === level));
-    const bb = card.querySelector('.best'); if (bb && kind === 'title') bb.textContent = `Best (${LV().label}): ${fmt(best)}${isTouch ? '' : ' · press Space'}`;
-    b.blur();
-  }));
-  const btn = document.getElementById('goBtn');
-  btn.addEventListener('click', () => { if (mode === 'paused') resumeGame(); else startRun(); });
+    const bb = card.querySelector('.best'); if (bb && mode === 'title') bb.textContent = bestLine();
+    b.blur(); return;
+  }
+  if (b.id === 'goBtn') { if (mode === 'paused') resumeGame(); else startRun(); return; }
+  if (b.id === 'shopBtn') { shopFrom = mode === 'over' ? 'over' : 'title'; boughtId = null; resetArmed = false; showCard('shop'); return; }
+  if (b.id === 'backBtn') { boughtId = null; showCard(shopFrom, { animate: false }); return; }
+  if (b.dataset.up) {
+    const u = UPGRADES.find(x => x.id === b.dataset.up), l = U(u.id), c = costOf(u, l);
+    if (l >= u.max || save.coins < c) { SFX.nope(); return; }
+    save.coins -= c; save.up[u.id] = l + 1; SFX.buy(); boughtId = u.id; writeSave(); showCard('shop', { keepScroll: true }); return;
+  }
+  if (b.dataset.jacket) { buy(JACKETS, 'jacket', b.dataset.jacket); return; }
+  if (b.dataset.trail) { buy(TRAILS, 'trail', b.dataset.trail); return; }
+  if (b.id === 'resetBtn') {
+    if (!resetArmed) { resetArmed = true; showCard('shop', { keepScroll: true }); later(() => { resetArmed = false; if (shopOpen) showCard('shop', { keepScroll: true }); }, 3500); return; }
+    resetArmed = false; save = defaultSave(); ensureMissions(); writeSave(); boughtId = null; showCard('shop', { keepScroll: true });
+  }
 }
 
 /* ---------- main loop ---------- */
@@ -1160,7 +1531,7 @@ function frame(ts) {
   }
   if (mode !== 'paused') updateFx(dt);
   const showTouch = mode === 'playing' || mode === 'dying';
-  if (showTouch !== touchShown) { touchShown = showTouch; touchEl.style.visibility = showTouch ? 'visible' : 'hidden'; }
+  if (showTouch !== touchShown) { touchShown = showTouch; touchEl.style.visibility = showTouch ? 'visible' : 'hidden'; pauseBtn.style.visibility = showTouch ? 'visible' : 'hidden'; }
   render();
   requestAnimationFrame(frame);
 }

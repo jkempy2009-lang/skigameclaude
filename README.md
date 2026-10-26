@@ -32,3 +32,18 @@ is, avalanche speed and how many snowboarders cross the slope. Your choice and a
 - **Pickups:** cocoa (+1 heart), hot wax (speed boost)
 - **Biomes:** Pine Forest → Alpine Ridge (1,200 m) → Glacier (3,000 m), with difficulty ramping throughout
 - **Tricks are risky:** a 360 is easy, a 720 needs a precise release, and landing mid-spin wipes you out
+
+## Progression
+
+Everything you do earns **coins**, and the shop turns them into upgrades and looks.
+
+- **Earning:** coins sit along the open line, float over logs (hop for them) and arc along ramp jumps. After a run you also
+  get coins for distance, gates, tricks, close calls, completed missions and a daily-streak bonus. Hard pays ×1.5.
+- **Missions:** three at a time, each worth coins. Finish one and it is replaced by a new one.
+- **Skier level:** your score is XP. Each level-up pays a coin bonus.
+- **Records:** once you have a best distance, a banner is placed across the lane at that distance. Beat it for a bonus.
+- **Upgrades (9):** Coin Magnet, Premium Wax, Combo Keeper, Thermos, Sharp Edges, Gold Digger, Score Boost, Cold Snap,
+  Tough Skin (extra hearts).
+- **Looks:** six jackets and five ski trails (including a rainbow one). Cosmetics change nothing about gameplay.
+
+Progress is saved in your browser (`localStorage`). There is a **Reset progress** link at the bottom of the shop.
