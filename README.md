@@ -11,14 +11,17 @@ go on indefinitely, but crashes and stalls let it catch up. Three hearts; lose t
 | Key | Action |
 | --- | --- |
 | `←` `→` / `A` `D` | Steer (straight down is fastest, sideways is slow) |
-| `↓` / `S` | Tuck: +30% speed, wider turns |
-| `↑` / `W` | Brake: sharper turns, much slower |
+| `↑` / `W` | Speed up (tuck): +30% speed, wider turns |
+| `↓` / `S` | Brake: sharper turns, much slower |
 | `Space` (tap, on the ground) | Hop low obstacles: logs, rocks, stumps (never trees) |
 | `Space` (hold, in the air) | Spin; `←`/`→` picks direction. Release in time to land clean |
 | `P` / `Esc` | Pause |
 | `M` | Mute |
 
-Touch devices get on-screen buttons.
+Touch devices get on-screen buttons (the right-hand ones are hop/trick, brake and speed).
+
+Pick **Chill / Normal / Hard** on the title or game-over card. It changes obstacle density, how wide the clear line
+is, avalanche speed and how many snowboarders cross the slope. Your choice and a best score per level are saved.
 
 ## What's in it
 
