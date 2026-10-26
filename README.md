@@ -1,10 +1,10 @@
 # Avalanche Run
 
-A top-down ski game in a single HTML file — no build step, no dependencies. Open `index.html` in a browser.
+A third-person ski game (camera behind the skier, looking down the slope) in a single HTML file — no build step, no dependencies. Open `index.html` in a browser.
 
-You ski down an endless, procedurally generated mountain while an avalanche chases you. It speeds up the
-further you go, and every crash costs you speed. Three hearts; if you lose them all, or the avalanche
-catches you, the run is over.
+You ski down an endless, procedurally generated mountain. Obstacles are solid: hit one and you stop, tumble and
+lose a heart. An avalanche chases from behind. It is slower than clean skiing, so a good run pulls away and can
+go on indefinitely, but crashes and stalls let it catch up. Three hearts; lose them all or get caught and it's over.
 
 ## Controls
 
@@ -13,6 +13,7 @@ catches you, the run is over.
 | `←` `→` / `A` `D` | Steer (straight down is fastest, sideways is slow) |
 | `↓` / `S` | Tuck: +30% speed, wider turns |
 | `↑` / `W` | Brake: sharper turns, much slower |
+| `Space` (tap, on the ground) | Hop low obstacles: logs, rocks, stumps (never trees) |
 | `Space` (hold, in the air) | Spin; `←`/`→` picks direction. Release in time to land clean |
 | `P` / `Esc` | Pause |
 | `M` | Mute |

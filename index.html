@@ -54,7 +54,7 @@
 
 <div class="touch" id="touch">
   <div class="grp l"><button data-k="left">◀</button><button data-k="right">▶</button></div>
-  <div class="grp r"><button data-k="trick">TRICK</button><div style="display:flex;gap:10px"><button class="sm" data-k="brake">BRAKE</button><button class="sm" data-k="tuck">TUCK</button></div></div>
+  <div class="grp r"><button data-k="trick">HOP / TRICK</button><div style="display:flex;gap:10px"><button class="sm" data-k="brake">BRAKE</button><button class="sm" data-k="tuck">TUCK</button></div></div>
 </div>
 
 <div id="overlay"><div class="card" id="card"></div></div>
@@ -99,15 +99,18 @@ const BIOMES = [
   { name: 'Glacier',      from: 3000, ground: [214, 233, 246] },
 ];
 const biomeIndex = m => m >= 3000 ? 2 : m >= 1200 ? 1 : 0;
-function groundColor(m) {
+function groundRGB(m) {
   let c = BIOMES[0].ground;
   for (let i = 1; i < BIOMES.length; i++) {
     const t = clamp((m - (BIOMES[i].from - 150)) / 150, 0, 1), g = BIOMES[i].ground;
     c = [lerp(c[0], g[0], t), lerp(c[1], g[1], t), lerp(c[2], g[2], t)];
   }
-  return `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+  return c;
 }
-const difficulty = y => clamp(y / PX_PER_M / 6000, 0, 1);
+// third-person camera: sits BACK units behind the skier, looking down the slope
+const BACK = 260, FAR = 3200, NEAR = 90, FOG0 = 1900;
+let F = 480, HC = 156, HOR = 156;            // focal length, camera height, horizon screen-y
+const difficulty = y => clamp(y / PX_PER_M / 9000, 0, 1);
 const laneHalf = y => lerp(340, 265, difficulty(y));
 const laneCenter = y => { const k = Math.min(1, Math.max(0, y) / 1500); return k * (200 * Math.sin(y / 1300) + 120 * Math.sin(y / 520 + 1.3)); };
 
@@ -121,6 +124,12 @@ function resize() {
   canvas.height = Math.round(innerHeight * dpr);
   scale = Math.min(canvas.height / 600, canvas.width / (innerWidth < innerHeight ? 560 : 800));
   W = canvas.width / scale; H = canvas.height / scale; cssU = dpr / scale;
+  setupCamera();
+}
+function setupCamera() {
+  F = 480 * clamp(W / 1066, 0.62, 1.2);
+  HOR = H * 0.26;
+  HC = (H * 0.74 - HOR) * BACK / F;          // puts the skier at 74% of screen height
 }
 addEventListener('resize', resize);
 resize();
@@ -230,6 +239,7 @@ let mode = 'title';           // title | playing | paused | dying | over
 let rng = Math.random;
 let chunks = new Map();
 let genY = 0, pathOff = 0, lockUntil = 0, slalom = null;
+let pathPts = [];             // the guaranteed-open corridor centre, one point per generated row (used for fairness tests)
 let sk, run, cam;
 const particles = [], popups = [], trail = [], flakes = [];
 let best = 0;
@@ -252,11 +262,11 @@ function pickHard(b) {
 function addHard(kind, x, y, b, lane) {
   const s = 0.85 + rng() * 0.5;
   switch (kind) {
-    case 'tree': return add({ t: 'tree', x, y, r: 11 * s, s, zh: 58, lane });
-    case 'dead': return add({ t: 'dead', x, y, r: 8 * s, s, zh: 58, lane });
-    case 'rock': { const r = 13 + rng() * 9; return add({ t: 'rock', x, y, r, zh: 18, ice: b === 2, lane }); }
-    case 'stump': return add({ t: 'stump', x, y, r: 9, zh: 12, lane });
-    case 'log': return add({ t: 'log', x, y, w: 62 + rng() * 34, h: 15, zh: 13, lane });
+    case 'tree': return add({ t: 'tree', x, y, r: 15 * s, s, zh: 58, lane });
+    case 'dead': return add({ t: 'dead', x, y, r: 10 * s, s, zh: 58, lane });
+    case 'rock': { const r = lane ? 12 + rng() * 7 : 13 + rng() * 9; return add({ t: 'rock', x, y, r, zh: 18, ice: b === 2, lane }); }
+    case 'stump': return add({ t: 'stump', x, y, r: 11, zh: 12, lane });
+    case 'log': return add({ t: 'log', x, y, w: 62 + rng() * 34, h: 18, zh: 13, lane });
   }
 }
 function genEdges(y, c, half, b) {
@@ -271,19 +281,19 @@ function genEdges(y, c, half, b) {
 }
 function genRow(y) {
   const m = y / PX_PER_M, d = difficulty(y), b = biomeIndex(m);
-  const c = laneCenter(y), half = laneHalf(y), gap = lerp(135, 88, d);
+  const c = laneCenter(y), half = laneHalf(y), gap = lerp(118, 82, d);
   genEdges(y, c, half, b);
   if (y < 380) return gap;
 
   const locked = y < lockUntil;
-  let clear = locked ? 150 : lerp(78, 58, d);
-  const step = gap * 0.4;
+  let clear = locked ? 150 : lerp(76, 66, d);
+  const step = gap * 0.3;
   let gateRow = false;
 
   if (slalom) {
     clear = 95;
-    const target = slalom.dir * 100;
-    pathOff += clamp(target - pathOff, -step, step);
+    const target = slalom.dir * 75;
+    pathOff += clamp(target - pathOff, -gap * 0.45, gap * 0.45);
     if (++slalom.rows % 3 === 0) {
       gateRow = true;
       if (--slalom.left <= 0) slalom = null; else slalom.dir *= -1;
@@ -294,16 +304,31 @@ function genRow(y) {
   }
   pathOff = clamp(pathOff, -(half - 100), half - 100);
   const px = c + pathOff;
+  pathPts.push({ y, x: px, clear });
 
   if (gateRow) add({ t: 'gate', x: px, y, half: 62 });
 
   // hard obstacles scattered across the lane, always leaving the path corridor open
-  const n = Math.round(lerp(2, 4, d) + rng() * 1.5) - (slalom ? 1 : 0);
+  const n = Math.round(lerp(4, 5.5, d) + rng() * 2) - (slalom ? 2 : 0);
   for (let i = 0; i < n; i++) {
+    const kind = pickHard(b), cl = clear + (kind === 'log' ? 50 : 0);        // logs are wide: keep their ends out of the corridor too
     let x = c + (rng() * 2 - 1) * half * 0.96;
-    if (Math.abs(x - px) < clear) x = px + (x >= px ? 1 : -1) * (clear + rng() * 40);
+    if (Math.abs(x - px) < cl) x = px + (x >= px ? 1 : -1) * (cl + rng() * 40);
     if (Math.abs(x - c) > half) continue;
-    addHard(pickHard(b), x, y + rng() * gap * 0.9, b, true);
+    addHard(kind, x, y + rng() * gap * 0.5, b, true);
+  }
+  if (!locked && !slalom) {
+    // groves / boulder fields: clumps you have to route around, set well clear of the path corridor
+    if (rng() < 0.12) {
+      const side = rng() < .5 ? -1 : 1, cx = px + side * (clear + 95 + rng() * 90);
+      if (Math.abs(cx - c) < half) for (let i = 0, k = 4 + Math.floor(rng() * 3); i < k; i++)
+        addHard(b === 0 ? 'tree' : b === 1 ? (rng() < .5 ? 'rock' : 'dead') : 'rock', cx + (rng() - .5) * 80, y + rng() * gap * 0.5, b, true);
+    }
+    // log fences: low, so you can hop them (Space) or go round
+    if (b < 2 && rng() < 0.05) {
+      const side = rng() < .5 ? -1 : 1;
+      for (let i = 0; i < 2; i++) addHard('log', px + side * (clear + 55 + i * 100), y + rng() * gap * 0.4, b, true);
+    }
   }
 
   if (!locked && !slalom) {
@@ -315,11 +340,11 @@ function genRow(y) {
       const cx = c + (rng() * 2 - 1) * half * 0.8, k = 3 + Math.floor(rng() * 3);
       for (let i = 0; i < k; i++) add({ t: 'mogul', x: cx + (rng() - .5) * 110, y: y + rng() * 70, r: 20 + rng() * 6 });
     }
-    if (rng() < (b === 2 ? 0.12 : b === 1 ? 0.045 : 0.015))
+    if (rng() < (b === 2 ? 0.05 : b === 1 ? 0.035 : 0.015))
       add({ t: 'ice', x: c + (rng() * 2 - 1) * half * 0.8, y: y + 20, a: 70 + rng() * 60, b: 30 + rng() * 20 });
     if (rng() < 0.012 + d * 0.006) add({ t: 'cocoa', x: px + (rng() - .5) * 60, y });
     if (rng() < 0.010) add({ t: 'wax', x: px + (rng() - .5) * 60, y });
-    if (b >= 1 && rng() < 0.02 + d * 0.03) {
+    if (b >= 1 && rng() < 0.012 + d * 0.014) {
       const dir = rng() < .5 ? -1 : 1;
       add({ t: 'crosser', x: c - dir * half * 0.95, y: y + 30, r: 9, zh: 40, vx: dir * (85 + rng() * 55), lim: half, lane: true });
     }
@@ -330,6 +355,7 @@ function ensureGen(uptoY) { while (genY < uptoY) genY += genRow(genY); }
 function cullChunks(belowY) {
   const lim = Math.floor((belowY - 700) / CH);
   for (const k of chunks.keys()) if (k < lim) chunks.delete(k);
+  while (pathPts.length > 64 && pathPts[0].y < belowY - 700) pathPts.shift();
 }
 function nearby(y, range, fn) {
   const c0 = Math.floor((y - range) / CH), c1 = Math.floor((y + range) / CH);
@@ -343,14 +369,15 @@ function nearby(y, range, fn) {
 function newRun() {
   rng = mulberry32((Math.random() * 4294967296) >>> 0);
   chunks = new Map(); particles.length = popups.length = trail.length = 0;
-  genY = -520; pathOff = 0; lockUntil = 0; slalom = null;
+  genY = -520; pathOff = 0; lockUntil = 0; slalom = null; pathPts = [];
   sk = { x: 0, y: 0, vx: 0, vy: 0, speed: 0, heading: 0, z: 0, vz: 0, spin: 0, spinDir: 1, spinAccum: 0, airT: 0,
-         tumble: 0, tumRot: 0, invuln: 0, hearts: 3, tuck: false, wax: 0, onIce: false, buried: false, grounded: true };
+         tumble: 0, tumRot: 0, invuln: 0, hearts: 3, tuck: false, wax: 0, onIce: false, buried: false, grounded: true, trickPrev: false };
   run = { bonus: 0, dist: 0, combo: 0, comboT: 0, gates: 0, missed: 0, tricks: 0, bestTrick: 0, closeCalls: 0, topSpeed: 0,
-          avalY: -520, avalSpeed: 330, shake: 0, biome: 0, banner: 0, bannerText: '', time: 0, dyingT: 0, cause: '', danger: 0 };
-  cam = { x: 0, y: -H * 0.28 };
+          avalY: -800, avalSpeed: 240, shake: 0, biome: 0, banner: 0, bannerText: '', time: 0, dyingT: 0, cause: '', danger: 0 };
+  cam = { x: 0, y: -BACK, roll: 0 };
   if (!flakes.length) for (let i = 0; i < 170; i++) flakes.push({ x: Math.random() * 1600, y: Math.random() * 1800, d: 0.25 + Math.random() * 0.75, ph: Math.random() * 6 });
-  ensureGen(cam.y + H + 900);
+  sk.trickPrev = !!readInput().trick;
+  ensureGen(FAR + 300);
 }
 const score = () => Math.floor(run.dist + run.bonus);
 
@@ -388,8 +415,8 @@ function popup(text, color = '#16324a', size = 22) { popups.push({ text, color, 
 
 /* ---------- gameplay events ---------- */
 function crash(why) {
-  sk.hearts--; sk.tumble = 1.0; sk.invuln = 2.4; sk.spin = 0; sk.spinAccum = 0;
-  sk.speed *= 0.25; sk.vx *= 0.3; sk.vy *= 0.3; sk.wax = 0;
+  sk.hearts--; sk.tumble = 0.7; sk.invuln = 2.0; sk.spin = 0; sk.spinAccum = 0;
+  sk.speed *= 0.4; sk.vx *= 0.4; sk.vy *= 0.4; sk.wax = 0;
   run.combo = 0; run.shake = 14;
   burst(sk.x, sk.y, 26, 220);
   SFX.crash();
@@ -426,7 +453,7 @@ function gatePass(o) {
     o.ok = true; run.gates++;
     const perfect = dx < 16;
     award(perfect ? 100 : 50, perfect ? 'PERFECT GATE' : 'GATE', perfect ? '#e8412c' : '#3a7bd5');
-    run.avalY -= 40; SFX.gate(perfect);
+    run.avalY -= 60; SFX.gate(perfect);
   } else {
     o.miss = true; run.missed++;
     if (run.combo > 0) popup('GATE MISSED', '#7a8a99', 20);
@@ -449,15 +476,20 @@ function nearMiss(o) {
 function step(dt) {
   const inp = readInput();
   run.time += dt;
+  if (inp.trick && !sk.trickPrev && !(sk.z > 0 || sk.vz > 0) && !sk.tumble && !sk.buried) {   // tap Space on the ground: hop
+    sk.vz = 250; sk.z = 0.01; sk.airT = 0; sk.spin = 0; sk.spinAccum = 0; SFX.jump();
+  }
+  sk.trickPrev = !!inp.trick;
   const air = sk.z > 0 || sk.vz > 0;
 
-  if (sk.invuln > 0) sk.invuln -= dt;
-  if (sk.wax > 0) sk.wax -= dt;
+  // timers are clamped to exactly 0 when they expire: a leftover tiny negative value is truthy and would read as "still active"
+  sk.invuln = Math.max(0, sk.invuln - dt);
+  sk.wax = Math.max(0, sk.wax - dt);
   if (run.comboT > 0 && (run.comboT -= dt) <= 0) run.combo = 0;
 
   if (!sk.buried) {
     if (sk.tumble > 0) {
-      sk.tumble -= dt; sk.tumRot += dt * 14;
+      sk.tumble = Math.max(0, sk.tumble - dt); sk.tumRot += dt * 14;
       const f = Math.exp(-1.6 * dt); sk.vx *= f; sk.vy *= f; sk.speed *= f;
       if (sk.tumble <= 0) { sk.heading = 0; sk.speed = Math.max(sk.speed, 60); }
     } else {
@@ -479,10 +511,10 @@ function step(dt) {
 
   // avalanche
   const m = sk.y / PX_PER_M;
-  run.avalSpeed = 330 + Math.min(m * 0.04, 230);
-  run.avalY = Math.max(run.avalY + run.avalSpeed * dt, sk.y - 1100);
+  run.avalSpeed = 240 + Math.min(m * 0.015, 90);          // tops out at 330: always beatable by clean skiing
+  run.avalY = Math.max(run.avalY + run.avalSpeed * dt, sk.y - 1500);   // clean skiing builds a buffer of ~4-6 s, up to this cap
   const gapNow = sk.y - run.avalY;
-  run.danger = clamp(1 - gapNow / 420, 0, 1);
+  run.danger = clamp(1 - gapNow / 450, 0, 1);
   if (gapNow <= 8 && !sk.buried) { sk.buried = true; die('buried'); }
 
   // biome banner
@@ -492,13 +524,13 @@ function step(dt) {
 
   if (mode === 'dying' && (run.dyingT += dt) > (run.cause === 'buried' ? 1.6 : 1.1)) endRun();
 
-  ensureGen(sk.y + H + 900);
+  ensureGen(sk.y + FAR + 300);
 }
 
 function steer(inp, air, dt) {
   sk.tuck = !!inp.tuck && !air;
   const dir = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
-  if (air && inp.trick) {
+  if (air && inp.trick && sk.airT > 0.12) {
     if (dir) sk.spinDir = dir;
     sk.spin += sk.spinDir * 15 * dt; sk.spinAccum += 15 * dt;
   } else if (air) {
@@ -509,7 +541,7 @@ function steer(inp, air, dt) {
   if (sk.tuck) tr *= 0.6;
   if (inp.brake && !air) tr *= 1.35;
   if (air) tr *= 0.5;
-  if (dir && !(air && inp.trick)) sk.heading += dir * tr * dt;
+  if (dir && !(air && inp.trick && sk.airT > 0.12)) sk.heading += dir * tr * dt;
   else if (!dir && !air) sk.heading -= Math.sign(sk.heading) * Math.min(Math.abs(sk.heading), 0.9 * dt);
   sk.heading = clamp(sk.heading, -1.28, 1.28);
 
@@ -520,7 +552,7 @@ function steer(inp, air, dt) {
     if (inp.brake) target *= 0.45;
     if (sk.wax > 0) target *= 1.28;
     if (sk.onIce) target *= 1.1;
-    sk.speed += (target - sk.speed) * (1 - Math.exp(-(target > sk.speed ? 0.85 : 2.0) * dt));
+    sk.speed += (target - sk.speed) * (1 - Math.exp(-(target > sk.speed ? 1.1 : 2.0) * dt));
   }
   const dvx = sk.speed * Math.sin(sk.heading), dvy = sk.speed * f;
   const gx = air ? 0.6 : sk.onIce ? 1.4 : 9, gy = air ? 0.6 : sk.onIce ? 2.5 : 9;
@@ -528,6 +560,15 @@ function steer(inp, air, dt) {
   sk.vy += (dvy - sk.vy) * (1 - Math.exp(-gy * dt));
 }
 
+function contact(o) {
+  let cx, cy, rad;
+  if (o.t === 'log') { cx = clamp(sk.x, o.x - o.w / 2, o.x + o.w / 2); cy = clamp(sk.y, o.y - o.h / 2, o.y + o.h / 2); rad = SR; }
+  else { cx = o.x; cy = o.y; rad = o.r + SR; }
+  const dx = sk.x - cx, dy = sk.y - cy, d2 = dx * dx + dy * dy;
+  if (d2 >= rad * rad) return null;
+  const d = Math.sqrt(d2);
+  return d < 1e-6 ? { nx: 0, ny: -1, pen: rad } : { nx: dx / d, ny: dy / d, pen: rad - d };
+}
 function interact() {
   const grounded = !(sk.z > 0 || sk.vz > 0);
   nearby(sk.y, 120, o => {
@@ -545,9 +586,17 @@ function interact() {
       case 'gate': if (!o.done && sk.y >= o.y) { o.done = true; gatePass(o); } break;
       default: {
         if (o.zh < 0) break;
-        if (!sk.invuln && !sk.tumble && sk.z < o.zh) {
-          const hit = o.t === 'log' ? gapTo(o) < 0 : (dx * dx + dy * dy < (o.r + SR) * (o.r + SR));
-          if (hit) { o.hit = true; crash(); }
+        if (sk.z < o.zh) {                       // tall enough to block you at this height
+          const c = contact(o);
+          if (c) {                               // always solid: you stop at the surface, never pass through
+            sk.x += c.nx * c.pen; sk.y += c.ny * c.pen;
+            const vn = sk.vx * c.nx + sk.vy * c.ny;
+            if (vn < 0) { sk.vx -= 1.35 * vn * c.nx; sk.vy -= 1.35 * vn * c.ny; }
+            if (!sk.invuln && !sk.tumble) {
+              o.hit = true; crash();
+              sk.vx += (dx >= 0 ? 1 : -1) * 110;   // slide off to the side instead of sticking to what you hit
+            }
+          }
         }
         if (!o.done && sk.y >= o.y) {
           o.done = true;
@@ -559,7 +608,7 @@ function interact() {
 }
 
 function updateCrossers(dt) {
-  const c0 = Math.floor((cam.y - 100) / CH), c1 = Math.floor((cam.y + H + 500) / CH);
+  const c0 = Math.floor((cam.y - 100) / CH), c1 = Math.floor((cam.y + FAR) / CH);
   for (let ci = c0; ci <= c1; ci++) {
     const a = chunks.get(ci); if (!a) continue;
     for (const o of a) if (o.t === 'crosser') {
@@ -575,9 +624,10 @@ function updateFx(dt) {
   const playing = mode === 'playing' || mode === 'dying';
   // camera
   const sn = clamp(Math.hypot(sk.vx, sk.vy) / 700, 0, 1);
-  const wantY = sk.y - H * lerp(0.30, 0.22, sn);
-  cam.y = playing ? lerp(cam.y, wantY, 1 - Math.exp(-8 * dt)) : cam.y;
-  cam.x = lerp(cam.x, sk.x + sk.vx * 0.22, 1 - Math.exp(-5 * dt));
+  cam.y = sk.y - BACK;
+  const bend = laneCenter(sk.y + 700) - laneCenter(sk.y);      // swing the view toward upcoming bends
+  cam.x = lerp(cam.x, sk.x + sk.vx * 0.12 + bend * 0.3, 1 - Math.exp(-6 * dt));
+  cam.roll = lerp(cam.roll, -sk.heading * 0.03 * (sk.z > 0 ? 0.4 : 1), 1 - Math.exp(-5 * dt));
   run.shake *= Math.exp(-6 * dt);
   if (playing) {
     const danger = run.danger;
@@ -622,9 +672,14 @@ function updateTrail() {
   if (!l || Math.hypot(sk.x - l.x, sk.y - l.y) > 5) { trail.push({ x: sk.x, y: sk.y, a: sk.heading }); if (trail.length > 420) trail.shift(); }
 }
 
-/* ---------- rendering ---------- */
-const sx = x => x - cam.x + W / 2;
-const sy = y => y - cam.y;
+/* ---------- rendering (third person, perspective) ----------
+   World point (x lateral, y downhill, z up) -> screen, with dz = y - cam.y:
+     k = F / dz;   X = W/2 + (x - cam.x) * k;   Y = HOR + (HC - z) * k
+   Sprites are drawn at their base point and scaled by k; flat terrain is also squashed vertically by HC/dz. */
+const fogFar = dz => dz > FOG0 ? clamp((FAR - dz) / (FAR - FOG0), 0, 1) : 1;
+const fogA = dz => dz < BACK - 20 ? clamp((dz - NEAR) / (BACK - 20 - NEAR), 0, 1) : fogFar(dz);   // things you've passed fade out rather than blocking the view
+function poly(pts) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.closePath(); ctx.fill(); }
+function P(x, y, z) { const k = F / Math.max(y - cam.y, 30); return [W / 2 + (x - cam.x) * k, HOR + (HC - z) * k]; }
 function ell(x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill(); }
 function shadow(x, y, rx, ry) { ctx.fillStyle = 'rgba(60,90,130,.2)'; ell(x + rx * 0.35, y + 1, rx, ry); }
 function tri(x1, y1, x2, y2, x3, y3) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.fill(); }
@@ -634,7 +689,7 @@ function drawPine(x, y, s) {
   ctx.fillStyle = '#5b3d28'; ctx.fillRect(x - 3 * s, y - 14 * s, 6 * s, 14 * s);
   const cols = ['#1d5538', '#256b47', '#2e8458'];
   for (let i = 0; i < 3; i++) {
-    const by = y - 8 * s - i * 17 * s, hw = (22 - i * 5) * s;
+    const by = y - 8 * s - i * 17 * s, hw = (20 - i * 5) * s;
     ctx.fillStyle = cols[i]; tri(x - hw, by, x + hw, by, x, by - 30 * s);
     ctx.fillStyle = 'rgba(255,255,255,.92)'; tri(x - hw * 0.5, by - 15 * s, x + hw * 0.5, by - 15 * s, x, by - 30 * s);
   }
@@ -676,32 +731,51 @@ function drawStump(x, y) {
   ctx.fillStyle = '#5b3d28'; ctx.fillRect(x - 7, y - 10, 14, 10);
   ctx.fillStyle = '#c9a074'; ell(x, y - 10, 7, 3); ctx.fillStyle = '#fff'; ell(x, y - 11, 5, 2);
 }
-function drawMogul(o, x, y) {
-  ctx.fillStyle = 'rgba(150,180,212,.55)'; ell(x + 3, y + 2, o.r, o.r * 0.55);
-  ctx.fillStyle = '#fbfdff'; ell(x - 2, y - 2, o.r * 0.9, o.r * 0.48);
+
+function drawMogul(o) {
+  const dz = Math.max(o.y - cam.y, 60), k = F / dz;
+  ctx.save(); ctx.translate(W / 2 + (o.x - cam.x) * k, HOR + HC * k); ctx.scale(k, k * Math.min(0.9, HC / dz * 2.2)); ctx.globalAlpha = fogFar(dz);
+  ctx.fillStyle = 'rgba(150,180,212,.6)'; ell(o.r * 0.25, o.r * 0.15, o.r, o.r * 0.6);
+  ctx.fillStyle = '#fbfdff'; ell(-o.r * 0.1, -o.r * 0.12, o.r * 0.88, o.r * 0.5);
+  ctx.restore();
 }
-function drawIce(o, x, y) {
-  ctx.fillStyle = 'rgba(150,205,240,.5)'; ell(x, y, o.a, o.b);
-  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, o.a * .95, o.b * .92, 0, 0, TAU); ctx.stroke();
-  ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - o.a * .5, y - 4); ctx.lineTo(x - o.a * .1, y - 9); ctx.moveTo(x + o.a * .1, y + 8); ctx.lineTo(x + o.a * .55, y + 3); ctx.stroke();
+function drawIce(o) {
+  const dz = Math.max(o.y - cam.y, 60), k = F / dz;
+  ctx.save(); ctx.translate(W / 2 + (o.x - cam.x) * k, HOR + HC * k); ctx.scale(k, k * HC / dz); ctx.globalAlpha = fogFar(dz);
+  ctx.fillStyle = 'rgba(150,205,240,.55)'; ell(0, 0, o.a, o.b);
+  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(0, 0, o.a * .95, o.b * .92, 0, 0, TAU); ctx.stroke();
+  ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-o.a * .5, -4); ctx.lineTo(-o.a * .1, -9); ctx.moveTo(o.a * .1, 8); ctx.lineTo(o.a * .55, 3); ctx.stroke();
+  ctx.restore();
 }
-function drawRamp(o, x, y) {
-  const w = o.w / 2, h = o.h;
-  ctx.fillStyle = 'rgba(60,90,130,.22)'; tri(x - w - 4, y + 10, x + w + 10, y + 10, x + w + 10, y - h * 0.4);
-  ctx.fillStyle = '#4b5b6e'; ctx.fillRect(x - w, y - 10, o.w, 12);
-  ctx.fillStyle = '#d8e6f2'; ctx.beginPath(); ctx.moveTo(x - w, y - 10); ctx.lineTo(x - w * 0.8, y - h); ctx.lineTo(x + w * 0.8, y - h); ctx.lineTo(x + w, y - 10); ctx.closePath(); ctx.fill();
+function drawRamp(o) {
+  const dz = o.y - cam.y; ctx.globalAlpha = fogFar(dz);
+  const hw = o.w / 2, LIP = 20, y0 = o.y - o.h;
+  const a = P(o.x - hw, y0, 0), b = P(o.x + hw, y0, 0), c = P(o.x + hw, o.y, LIP), d = P(o.x - hw, o.y, LIP), e = P(o.x + hw, o.y, 0), f = P(o.x - hw, o.y, 0);
+  ctx.fillStyle = 'rgba(60,90,130,.22)'; poly([f, e, P(o.x + hw + 26, o.y, 0), P(o.x - hw + 26, o.y, 0)]);
+  ctx.fillStyle = '#566a82'; poly(cam.x > o.x ? [b, e, c] : [a, f, d]);        // the side you can see
+  ctx.fillStyle = '#dbe8f4'; poly([a, b, c, d]);
   ctx.fillStyle = '#e8412c';
-  for (let i = 0; i < 3; i++) { const yy = y - 14 - i * 11; tri(x - w * 0.5, yy, x, yy - 8, x + w * 0.5, yy); }
+  for (let i = 1; i <= 3; i++) {
+    const yy = y0 + o.h * (i / 4.2), zz = LIP * (yy - y0) / o.h, yf = yy + 9, zf = LIP * (yf - y0) / o.h;
+    poly([P(o.x - hw * .5, yy, zz), P(o.x + hw * .5, yy, zz), P(o.x, yf, zf)]);
+  }
+  ctx.strokeStyle = '#3b4a5a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(d[0], d[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
+  ctx.globalAlpha = 1;
 }
-function drawGate(o, x, y, t) {
+function drawGate(o, dz, k, y, t) {
   for (const side of [-1, 1]) {
-    const px = x + side * o.half;
-    ctx.strokeStyle = '#3b4a5a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(px, y); ctx.lineTo(px, y - 40); ctx.stroke();
+    ctx.save(); ctx.translate(W / 2 + (o.x + side * o.half - cam.x) * k, y); ctx.scale(k, k);
+    ctx.strokeStyle = '#3b4a5a'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -46); ctx.stroke();
     ctx.fillStyle = o.ok ? '#2fb457' : o.miss ? '#98a6b3' : side < 0 ? '#e8412c' : '#2f6fe0';
     const wave = Math.sin(t * 6 + side) * 2;
-    tri(px, y - 40, px, y - 24, px - side * (18 + wave), y - 32 + wave * .4);
+    tri(0, -46, 0, -28, -side * (22 + wave), -37 + wave * .4);
+    ctx.restore();
   }
-  if (!o.done) { ctx.strokeStyle = 'rgba(232,65,44,.18)'; ctx.lineWidth = 2; ctx.setLineDash([6, 8]); ctx.beginPath(); ctx.moveTo(x - o.half, y); ctx.lineTo(x + o.half, y); ctx.stroke(); ctx.setLineDash([]); }
+  if (!o.done) {
+    const x = W / 2 + (o.x - cam.x) * k;
+    ctx.strokeStyle = 'rgba(232,65,44,.3)'; ctx.lineWidth = 2; ctx.setLineDash([8, 9]); ctx.beginPath();
+    ctx.moveTo(x - o.half * k, y); ctx.lineTo(x + o.half * k, y); ctx.stroke(); ctx.setLineDash([]);
+  }
 }
 function drawCocoa(x, y, t) {
   const bob = Math.sin(t * 3) * 3; shadow(x, y, 11, 4);
@@ -729,97 +803,124 @@ function drawCrosser(o, x, y, t) {
   ctx.restore();
 }
 
-function drawSkier(x, y) {
+/* The skier, seen from behind and above (facing down the slope). */
+function drawSkier() {
+  const k = F / BACK, v = HC / BACK, x = W / 2 + (sk.x - cam.x) * k, gy = HOR + HC * k;
   const lift = sk.z, tumbling = sk.tumble > 0;
   if (sk.invuln > 0 && !tumbling && Math.floor(run.time * 14) % 2 === 0) ctx.globalAlpha = 0.45;
-  ctx.fillStyle = `rgba(50,80,120,${0.28 / (1 + lift / 50)})`; ell(x + 4, y + 3, 11 / (1 + lift / 140), 4);
-  if (sk.wax > 0) {
-    const g = ctx.createRadialGradient(x, y - lift - 12, 3, x, y - lift - 12, 34);
-    g.addColorStop(0, 'rgba(255,170,40,.5)'); g.addColorStop(1, 'rgba(255,170,40,0)');
-    ctx.fillStyle = g; ctx.fillRect(x - 36, y - lift - 48, 72, 72);
-  }
-  ctx.save(); ctx.translate(x, y - lift);
-  const big = 1 + Math.min(lift, 90) / 220; ctx.scale(big, big);
+  ctx.save(); ctx.translate(x, gy); ctx.scale(k, k * v);                       // ground shadow, flattened
+  const sh = 1 / (1 + lift / 160);
+  ctx.fillStyle = `rgba(50,80,120,${0.32 / (1 + lift / 50)})`; ell(3, 0, 15 * sh, 6.5 * sh);
+  ctx.restore();
+  ctx.save(); ctx.translate(x, gy - lift * k); ctx.scale(k, k);
   ctx.lineCap = 'round';
+  if (sk.wax > 0) {
+    const g = ctx.createRadialGradient(0, -14, 3, 0, -14, 36);
+    g.addColorStop(0, 'rgba(255,170,40,.5)'); g.addColorStop(1, 'rgba(255,170,40,0)');
+    ctx.fillStyle = g; ctx.fillRect(-38, -52, 76, 76);
+  }
   if (tumbling) {
-    ctx.rotate(sk.tumRot);
-    ctx.strokeStyle = '#222'; ctx.lineWidth = 3.5;
-    ctx.beginPath(); ctx.moveTo(-17, -9); ctx.lineTo(14, 12); ctx.moveTo(15, -10); ctx.lineTo(-13, 13); ctx.stroke();
-    ctx.fillStyle = '#e8412c'; ell(0, 0, 8, 9);
-    ctx.fillStyle = '#2a2f3a'; ell(0, -11, 5.5, 5.5);
-  } else {
-    const a = sk.heading + sk.spin, dx = Math.sin(a), dy = Math.cos(a), nx = Math.cos(a), ny = -Math.sin(a);
+    ctx.translate(0, -12); ctx.rotate(sk.tumRot);
     ctx.strokeStyle = '#1d242e'; ctx.lineWidth = 3.6;
-    for (const sd of [-1, 1]) {
-      ctx.beginPath(); ctx.moveTo(nx * sd * 4.5 - dx * 17, ny * sd * 4.5 - dy * 17); ctx.lineTo(nx * sd * 4.5 + dx * 17, ny * sd * 4.5 + dy * 17); ctx.stroke();
-      ctx.strokeStyle = '#e8412c'; ctx.lineWidth = 3.6; ctx.beginPath();
-      ctx.moveTo(nx * sd * 4.5 + dx * 12, ny * sd * 4.5 + dy * 12); ctx.lineTo(nx * sd * 4.5 + dx * 17, ny * sd * 4.5 + dy * 17); ctx.stroke();
-      ctx.strokeStyle = '#1d242e'; ctx.lineWidth = 3.6;
+    ctx.beginPath(); ctx.moveTo(-19, -9); ctx.lineTo(15, 12); ctx.moveTo(16, -10); ctx.lineTo(-14, 13); ctx.stroke();
+    ctx.fillStyle = '#e8412c'; ell(0, 0, 8.5, 10); ctx.fillStyle = '#2a2f3a'; ell(0, -12, 6, 6);
+  } else {
+    const a = sk.heading + sk.spin, sa = Math.sin(a), ca = Math.cos(a);
+    const feet = [];
+    for (const sd of [-1, 1]) {                                               // skis lie on the ground plane: depth -> up the screen
+      const ol = ca * 4.8 * sd, od = -sa * 4.8 * sd;
+      ctx.strokeStyle = '#1d242e'; ctx.lineWidth = 3.8; ctx.beginPath();
+      ctx.moveTo(ol - sa * 19, -v * (od - ca * 19)); ctx.lineTo(ol + sa * 19, -v * (od + ca * 19)); ctx.stroke();
+      ctx.strokeStyle = '#e8412c'; ctx.beginPath();
+      ctx.moveTo(ol + sa * 13, -v * (od + ca * 13)); ctx.lineTo(ol + sa * 19, -v * (od + ca * 19)); ctx.stroke();
+      feet.push([ol, -v * od - 1]);
     }
-    const c = Math.cos(sk.spin), ac = Math.max(0.22, Math.abs(c)), tk = sk.tuck;
-    const lean = Math.sin(sk.heading) * 3, th = tk ? 8 : 12, ty = tk ? -10 : -14, hy = tk ? -21 : -27;
-    ctx.strokeStyle = '#2d3a4b'; ctx.lineWidth = 3.4;
-    ctx.beginPath(); ctx.moveTo(-3 * ac, ty + th); ctx.lineTo(-4.5 * ac, 0); ctx.moveTo(3 * ac, ty + th); ctx.lineTo(4.5 * ac, 0); ctx.stroke();
-    if (!tk) { ctx.strokeStyle = '#9fb0c2'; ctx.lineWidth = 1.5; ctx.beginPath();
-      ctx.moveTo(-8 * ac + lean, -13); ctx.lineTo(-14 * ac, 10); ctx.moveTo(8 * ac + lean, -13); ctx.lineTo(14 * ac, 10); ctx.stroke(); }
-    ctx.fillStyle = c >= 0 ? '#e8412c' : '#c2331f'; ell(lean, ty, 7 * ac, th * 0.75);
-    ctx.fillStyle = '#2a2f3a'; ell(lean, hy, 5.2, 5.2);
-    if (c > 0.15) { ctx.fillStyle = '#ffcf4a'; ctx.fillRect(lean - 3.6 * ac, hy - 0.6, 7.2 * ac, 3); }
+    const c = Math.cos(sk.spin), ac = Math.max(0.22, Math.abs(c)), tk = sk.tuck, bk = c >= 0;
+    const lean = Math.sin(sk.heading) * 3.5, ty = tk ? -11 : -17, th = tk ? 7 : 11, hy = tk ? -21 : -30;
+    ctx.strokeStyle = '#2d3a4b'; ctx.lineWidth = 4;
+    for (let i = 0; i < 2; i++) { const sd = i ? 1 : -1; ctx.beginPath(); ctx.moveTo(sd * 3.4 * ac + lean * .5, ty + th * .7); ctx.lineTo(feet[i][0], feet[i][1]); ctx.stroke(); }
+    if (!tk) {                                                                // poles trail behind, towards the camera
+      ctx.strokeStyle = '#9fb0c2'; ctx.lineWidth = 1.7; ctx.beginPath();
+      ctx.moveTo(-7 * ac + lean, ty - 2); ctx.lineTo(-16 * ac, 8); ctx.moveTo(7 * ac + lean, ty - 2); ctx.lineTo(16 * ac, 8); ctx.stroke();
+    }
+    ctx.fillStyle = bk ? '#e8412c' : '#c2331f'; ell(lean, ty, 7.8 * ac, th * 0.85);
+    if (bk) { ctx.fillStyle = '#b92c1a'; ell(lean, ty + 1, 5 * ac, th * 0.55); ctx.fillStyle = '#fff'; ctx.fillRect(lean - 6.5 * ac, ty - th * 0.5, 13 * ac, 2.4); }
+    ctx.fillStyle = '#2a2f3a'; ell(lean, hy, 5.8, 5.8);
+    if (bk) { ctx.fillStyle = '#e8412c'; ctx.fillRect(lean - 0.9, hy - 5.6, 1.8, 5); }
+    else { ctx.fillStyle = '#f2c9a0'; ell(lean, hy + 1, 3.6 * ac, 3.2); ctx.fillStyle = '#ffcf4a'; ctx.fillRect(lean - 4 * ac, hy - 1.2, 8 * ac, 3); }
   }
   ctx.restore(); ctx.globalAlpha = 1;
 }
 
-function drawGround() {
-  const m = Math.max(0, cam.y + H / 2) / PX_PER_M;
-  ctx.fillStyle = groundColor(m); ctx.fillRect(0, 0, W, H);
-  const cell = 110, x0 = Math.floor((cam.x - W / 2) / cell) - 1, x1 = Math.floor((cam.x + W / 2) / cell) + 1;
-  const y0 = Math.floor(cam.y / cell) - 1, y1 = Math.floor((cam.y + H) / cell) + 1;
-  ctx.strokeStyle = 'rgba(140,172,205,.3)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.beginPath();
-  for (let gy = y0; gy <= y1; gy++) for (let gx = x0; gx <= x1; gx++) {
-    const h = hash2(gx, gy); if (h > 0.55) continue;
-    const px = sx(gx * cell + hash2(gy, gx) * cell), py = sy(gy * cell + hash2(gx + 7, gy + 3) * cell), l = 12 + h * 40;
-    ctx.moveTo(px, py); ctx.quadraticCurveTo(px + l * 0.5, py - 4, px + l, py + 1);
+function drawBackdrop(m) {
+  const g = groundRGB(m), gs = `rgb(${g[0] | 0},${g[1] | 0},${g[2] | 0})`, ga = a => `rgba(${g[0] | 0},${g[1] | 0},${g[2] | 0},${a})`;
+  const sky = ctx.createLinearGradient(0, -150, 0, HOR);
+  sky.addColorStop(0, 'rgb(112,164,222)'); sky.addColorStop(0.75, 'rgb(186,212,238)'); sky.addColorStop(1, gs);
+  ctx.fillStyle = sky; ctx.fillRect(-200, -200, W + 400, HOR + 200);
+  const span = W + 700;                                                       // distant peaks, slow parallax
+  for (let layer = 0; layer < 2; layer++) {
+    const n = 7 + layer, shift = ((-cam.x * (0.03 + layer * 0.02)) % span + span) % span;
+    for (let i = 0; i < n; i++) {
+      const hh = hash2(i + layer * 31, 9), x = (i / n * span + shift) % span - 350 + (hh - .5) * 90;
+      const h = (46 + hh * 86 + layer * 22) * (H / 600), w = h * 1.5;
+      ctx.fillStyle = layer ? 'rgb(168,192,219)' : 'rgb(194,213,234)'; tri(x - w, HOR + 2, x + w, HOR + 2, x, HOR - h);
+      ctx.fillStyle = '#f2f8fd'; tri(x - w * .26, HOR - h * .74, x + w * .26, HOR - h * .74, x, HOR - h);
+    }
+  }
+  ctx.fillStyle = gs; ctx.fillRect(-200, HOR, W + 400, H - HOR + 200);
+  const band = 200;                                                           // alternating shade bands: a strong sense of speed
+  ctx.fillStyle = 'rgba(150,185,222,.14)';
+  for (let by = Math.floor((cam.y + FAR) / band) * band; by > cam.y + 30; by -= band) {
+    if ((by / band) & 1) continue;
+    const yF = HOR + HC * F / (by + band - cam.y), yN = HOR + HC * F / Math.max(by - cam.y, 30);
+    ctx.fillRect(-200, yF, W + 400, yN - yF);
+  }
+  ctx.strokeStyle = 'rgba(140,172,205,.4)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.beginPath();
+  const cell = 130, r0 = Math.floor((cam.y + 80) / cell), r1 = Math.floor((cam.y + 1800) / cell);
+  for (let gy = r0; gy <= r1; gy++) {
+    const half = (W / 2) / (F / Math.max(gy * cell - cam.y, 80)) + 80, g0 = Math.floor((cam.x - half) / cell), g1 = Math.floor((cam.x + half) / cell);
+    for (let gx = g0; gx <= g1; gx++) {
+      const h = hash2(gx, gy); if (h > 0.45) continue;
+      const wy = gy * cell + hash2(gx + 5, gy) * cell, dz = wy - cam.y; if (dz < 60) continue;
+      const k = F / dz, px = W / 2 + (gx * cell + hash2(gy, gx) * cell - cam.x) * k, py = HOR + HC * k, l = (16 + h * 50) * k;
+      ctx.moveTo(px, py); ctx.quadraticCurveTo(px + l * .5, py - 1.5 * k, px + l, py + 0.5 * k);
+    }
   }
   ctx.stroke();
+  const fog = ctx.createLinearGradient(0, HOR, 0, HOR + H * 0.2);            // haze where the slope meets the sky
+  fog.addColorStop(0, ga(1)); fog.addColorStop(1, ga(0));
+  ctx.fillStyle = fog; ctx.fillRect(-200, HOR, W + 400, H * 0.2);
 }
 function drawTrail() {
-  ctx.lineWidth = 1.7; ctx.strokeStyle = 'rgba(112,145,182,.55)'; ctx.lineJoin = 'round';
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(112,145,182,.6)'; ctx.lineJoin = 'round';
   for (const side of [-1, 1]) {
     ctx.beginPath(); let pen = false;
     for (const p of trail) {
       if (!p) { pen = false; continue; }
-      const x = sx(p.x + Math.cos(p.a) * 3.8 * side), y = sy(p.y - Math.sin(p.a) * 3.8 * side);
+      const wx = p.x + Math.cos(p.a) * 3.8 * side, wy = p.y - Math.sin(p.a) * 3.8 * side, dz = wy - cam.y;
+      if (dz < 30) { pen = false; continue; }
+      const k = F / dz, x = W / 2 + (wx - cam.x) * k, y = HOR + HC * k;
       if (pen) ctx.lineTo(x, y); else { ctx.moveTo(x, y); pen = true; }
     }
     ctx.stroke();
   }
 }
+/* The avalanche is behind the camera, so you can't see it coming; it only shows once it is close enough to
+   swallow the view. Until then you get the meter, the shake, the red vignette and the rumble. */
 function drawAvalanche(t) {
-  const fy = sy(run.avalY);
-  if (fy < -200) return;
-  const top = Math.min(fy, H + 80);
-  // shadow cast ahead of the wave
-  const sg = ctx.createLinearGradient(0, fy, 0, fy + 70);
-  sg.addColorStop(0, 'rgba(50,80,120,.35)'); sg.addColorStop(1, 'rgba(50,80,120,0)');
-  ctx.fillStyle = sg; ctx.fillRect(0, fy, W, 70);
-  ctx.fillStyle = '#b7cde2'; ctx.fillRect(0, Math.min(0, top) - 4, W, top - Math.min(0, top) + 4);
-  // billowing front: three layers of puffs
-  for (let layer = 0; layer < 3; layer++) {
-    const n = Math.ceil(W / 46) + 2, off = layer * 17;
-    for (let i = -1; i < n; i++) {
-      const k = Math.floor((cam.x) / 46) + i, hx = hash2(k + layer * 99, 5), px = sx(k * 46 + hx * 20) , r = 30 + hx * 30 - layer * 5;
-      const py = fy - layer * 22 + Math.sin(t * 2.2 + k * 1.7 + layer) * 6 - off * 0.2;
-      ctx.fillStyle = layer === 0 ? '#f4f9fe' : layer === 1 ? '#dce9f5' : '#c7daec';
-      if (py - r > H) continue;
-      ctx.beginPath(); ctx.arc(px, py - r * 0.2, r, 0, TAU); ctx.fill();
+  const gap = sk.y - run.avalY, wall = clamp((340 - gap) / 340, 0, 1);
+  if (wall <= 0) return;
+  const hgt = H * (0.12 + 0.95 * wall), top = H - hgt;
+  for (let layer = 1; layer >= 0; layer--) {
+    ctx.fillStyle = layer ? '#d6e5f3' : '#f6fafe';
+    for (let i = -2, n = Math.ceil((W + 300) / 70); i < n; i++) {
+      const hx = hash2(i + layer * 50, 4), px = i * 70 + hx * 40 - 100, r = 50 + hx * 60 + wall * 40;
+      ctx.beginPath(); ctx.arc(px, top - layer * 28 + Math.sin(t * 2.4 + i * 1.3 + layer) * 8 + r * 0.2, r, 0, TAU); ctx.fill();
     }
   }
-  // flying debris
-  ctx.fillStyle = '#5b6773';
-  for (let i = 0; i < 16; i++) {
-    const k = Math.floor(cam.x / 70) + i - 6, h = hash2(k, 77), px = sx(k * 70 + h * 60), py = fy - 10 - hash2(k, 78) * 70 + Math.sin(t * 5 + k) * 6;
-    ctx.fillRect(px, py, 3 + h * 4, 3 + h * 3);
-  }
+  const g = ctx.createLinearGradient(0, top, 0, H); g.addColorStop(0, '#f6fafe'); g.addColorStop(1, '#c4d8ea');
+  ctx.fillStyle = g; ctx.fillRect(-200, top + 40, W + 400, hgt + 300);
+  if (wall > 0.55) { ctx.fillStyle = `rgba(240,247,253,${clamp((wall - .55) / .4, 0, 1) * 0.97})`; ctx.fillRect(-200, -200, W + 400, H + 400); }
 }
 function drawFlakes() {
   const fast = Math.hypot(sk.vx, sk.vy) > 330;
@@ -854,11 +955,16 @@ function drawHUD() {
     text(`${run.combo} chain`, pad + 50, 106, 12, '#3b5873', 'left', 700);
   }
   // avalanche proximity meter (top centre)
-  const mw = Math.min(260, W * 0.34), mx = W / 2 - mw / 2, gap = sk.y - run.avalY, fill = clamp(1 - gap / 700, 0, 1);
+  const mw = Math.min(260, W * 0.34), mx = W / 2 - mw / 2, gap = sk.y - run.avalY, fill = clamp(1 - gap / 1100, 0, 1);
   ctx.fillStyle = 'rgba(22,50,74,.25)'; ctx.beginPath(); ctx.roundRect(mx, 16, mw, 12, 6); ctx.fill();
   ctx.fillStyle = fill > 0.6 ? '#e8412c' : fill > 0.3 ? '#f0a020' : '#3a9ad9'; ctx.beginPath(); ctx.roundRect(mx, 16, Math.max(12, mw * fill), 12, 6); ctx.fill();
   text(`AVALANCHE  ${Math.max(0, Math.round(gap / PX_PER_M))} m`, W / 2, 46, 13, run.danger > .5 ? '#e8412c' : '#3b5873', 'center', 800);
   if (W > 700) text(`BEST ${fmt(Math.max(best, score()))}`, W - 108 * cssU, 34, 15, '#3b5873', 'right', 800);
+  if (run.danger > 0.15 && mode === 'playing') {
+    ctx.globalAlpha = 0.55 + 0.45 * Math.sin(run.time * 12);
+    text('AVALANCHE BEHIND YOU!', W / 2, H * 0.47, 26, '#e8412c', 'center', 900);
+    ctx.globalAlpha = 1;
+  }
   // biome banner
   if (run.banner > 0) {
     ctx.globalAlpha = clamp(run.banner / 0.6, 0, 1) * clamp((3 - run.banner) / 0.4, 0, 1);
@@ -866,10 +972,11 @@ function drawHUD() {
     ctx.globalAlpha = 1;
   }
 }
-function drawPopups(skx, sky) {
+function drawPopups() {
+  const k = F / BACK, x = W / 2 + (sk.x - cam.x) * k, y = HOR + (HC - sk.z) * k - 64 * k;
   for (let i = 0; i < popups.length; i++) {
     const p = popups[i], a = 1 - clamp((p.age - 0.9) / 0.5, 0, 1);
-    ctx.globalAlpha = a; text(p.text, skx, sky - 56 - p.age * 30 - (popups.length - 1 - i) * 28, p.size, p.color, 'center'); ctx.globalAlpha = 1;
+    ctx.globalAlpha = a; text(p.text, x, y - p.age * 30 - (popups.length - 1 - i) * 28, p.size, p.color, 'center'); ctx.globalAlpha = 1;
   }
 }
 function drawVignette() {
@@ -885,51 +992,61 @@ function render() {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.save();
   if (run.shake > 0.3) ctx.translate((Math.random() - .5) * run.shake, (Math.random() - .5) * run.shake);
-  drawGround();
+  ctx.translate(W / 2, H * 0.72); ctx.rotate(cam.roll); ctx.translate(-W / 2, -H * 0.72);      // bank into turns
+  drawBackdrop(Math.max(0, sk.y) / PX_PER_M);
 
-  const c0 = Math.floor((cam.y - 200) / CH), c1 = Math.floor((cam.y + H + 120) / CH);
-  const flat = [], tall = [];
+  const flats = [], talls = [];
+  const c0 = Math.floor((cam.y - 150) / CH), c1 = Math.floor((cam.y + FAR) / CH);
   for (let ci = c0; ci <= c1; ci++) {
     const a = chunks.get(ci); if (!a) continue;
     for (const o of a) {
-      const x = sx(o.x), y = sy(o.y);
-      if (y < -180 || y > H + 80 || x < -120 || x > W + 120) continue;
-      (o.t === 'ice' || o.t === 'mogul' || o.t === 'ramp' ? flat : tall).push(o);
+      const dz = o.y - cam.y, flat = o.t === 'ice' || o.t === 'mogul' || o.t === 'ramp';
+      if (dz > FAR || dz < (flat ? 20 - (o.b || 0) : NEAR)) continue;
+      const k = F / Math.max(dz, 40), px = W / 2 + (o.x - cam.x) * k, ext = (o.a || o.w || 70) + 50;
+      if (px < -ext * k || px > W + ext * k) continue;
+      (flat ? flats : talls).push(o);
     }
   }
-  for (const o of flat) { const x = sx(o.x), y = sy(o.y); if (o.t === 'ice') drawIce(o, x, y); else if (o.t === 'mogul') drawMogul(o, x, y); else drawRamp(o, x, y); }
+  flats.sort((a, b) => b.y - a.y);
+  for (const o of flats) o.t === 'ice' ? drawIce(o) : o.t === 'mogul' ? drawMogul(o) : drawRamp(o);
   drawTrail();
 
-  const skObj = { t: 'skier', y: sk.y };
-  if (!sk.buried) tall.push(skObj);
-  tall.sort((a, b) => a.y - b.y);
+  if (!sk.buried) talls.push({ t: 'skier', y: sk.y });
+  talls.sort((a, b) => b.y - a.y);                                           // far to near
   const tt = run.time || performance.now() / 1000;
-  for (const o of tall) {
-    const x = sx(o.x), y = sy(o.y);
+  for (const o of talls) {
+    if (o.t === 'skier') { drawSkier(); continue; }
+    const dz = o.y - cam.y, k = F / dz, y = HOR + HC * k;
+    ctx.globalAlpha = fogA(dz);
+    if (o.t === 'gate') { drawGate(o, dz, k, y, tt); ctx.globalAlpha = 1; continue; }
+    ctx.save(); ctx.translate(W / 2 + (o.x - cam.x) * k, y); ctx.scale(k, k);
     switch (o.t) {
-      case 'tree': drawPine(x, y, o.s); break;
-      case 'dead': drawDead(x, y, o.s); break;
-      case 'rock': drawRock(o, x, y); break;
-      case 'log': drawLog(o, x, y); break;
-      case 'stump': drawStump(x, y); break;
-      case 'gate': drawGate(o, x, y, tt); break;
-      case 'cocoa': if (!o.done) drawCocoa(x, y, tt); break;
-      case 'wax': if (!o.done) drawWax(x, y, tt); break;
-      case 'crosser': drawCrosser(o, x, y, tt); break;
-      case 'skier': drawSkier(sx(sk.x), sy(sk.y)); break;
+      case 'tree': drawPine(0, 0, o.s); break;
+      case 'dead': drawDead(0, 0, o.s); break;
+      case 'rock': drawRock(o, 0, 0); break;
+      case 'log': drawLog(o, 0, 0); break;
+      case 'stump': drawStump(0, 0); break;
+      case 'cocoa': if (!o.done) drawCocoa(0, 0, tt); break;
+      case 'wax': if (!o.done) drawWax(0, 0, tt); break;
+      case 'crosser': drawCrosser(o, 0, 0, tt); break;
     }
+    ctx.restore();
   }
-  // spray particles
-  ctx.fillStyle = 'rgba(255,255,255,.95)';
-  for (const p of particles) { const k = 1 - p.life / p.max; ctx.globalAlpha = clamp(k * 1.4, 0, 1); ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y) - p.z, p.size * (0.5 + k * 0.5), 0, TAU); ctx.fill(); }
   ctx.globalAlpha = 1;
 
+  ctx.fillStyle = 'rgba(255,255,255,.95)';                                    // snow spray
+  for (const p of particles) {
+    const dz = p.y - cam.y; if (dz < NEAR - 20) continue;
+    const k = F / dz, life = 1 - p.life / p.max;
+    ctx.globalAlpha = clamp(life * 1.4, 0, 1);
+    ctx.beginPath(); ctx.arc(W / 2 + (p.x - cam.x) * k, HOR + (HC - p.z) * k, Math.max(0.6, p.size * k * (0.5 + life * 0.5)), 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
   drawAvalanche(tt);
-  drawFlakes();
   ctx.restore();
+  drawFlakes();
   drawVignette();
-  if (mode !== 'title') drawHUD();
-  drawPopups(sx(sk.x) , sy(sk.y) - sk.z);
+  if (mode !== 'title') { drawHUD(); drawPopups(); }
 }
 
 /* ---------- menus ---------- */
@@ -939,14 +1056,14 @@ const KEYS_HTML = `
     <div><kbd>←</kbd><kbd>→</kbd> / <kbd>A</kbd><kbd>D</kbd></div><div>Steer. Straight down is fastest; sideways is slow.</div>
     <div><kbd>↓</kbd> / <kbd>S</kbd></div><div>Tuck: +30% speed, but wide, lazy turns.</div>
     <div><kbd>↑</kbd> / <kbd>W</kbd></div><div>Brake: sharper turns, much slower.</div>
-    <div><kbd>Space</kbd></div><div>In the air, <b>hold</b> to spin (←/→ picks direction). Release in time to land clean.</div>
+    <div><kbd>Space</kbd></div><div><b>Tap</b> to hop logs, rocks and stumps (not trees!). In the air after a ramp, <b>hold</b> to spin (←/→ picks direction) and release in time to land clean.</div>
     <div><kbd>P</kbd> <kbd>M</kbd></div><div>Pause · mute.</div>
   </div>`;
 const TIPS_HTML = `
   <ul class="tips">
-    <li>The <b>avalanche</b> never stops and gets faster the further you go. Every crash costs you speed.</li>
+    <li>Everything is solid. Hit a tree, rock or log and you stop dead, tumble and lose a heart. Find the open line, and keep your speed up: the <b>avalanche</b> is behind you and gains whenever you stall or crash, but a clean run pulls away and can go on forever.</li>
     <li><b>Gates</b> chain a combo (centre of the gate pays double). <b>Close calls</b> past trees and rocks at speed add to it. A crash breaks it.</li>
-    <li><b>Ramps</b> clear rocks and logs but not tall trees. Wipe out on a bad landing.</li>
+    <li><b>Ramps</b> launch you high enough to clear rocks and logs, but never trees. Land mid-spin and you wipe out.</li>
     <li>Ice won't let you turn. Cocoa heals, wax is a speed boost.</li>
   </ul>`;
 function showCard(kind) {
